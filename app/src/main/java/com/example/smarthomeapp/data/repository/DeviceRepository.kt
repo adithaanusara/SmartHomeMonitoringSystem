@@ -11,6 +11,7 @@ import com.example.smarthomeapp.data.remote.FirebaseDatabaseService
 import com.example.smarthomeapp.data.remote.observeChildren
 import com.example.smarthomeapp.data.remote.observeObject
 import com.example.smarthomeapp.data.remote.setValueSuspend
+import com.example.smarthomeapp.data.remote.valueEvents
 import com.example.smarthomeapp.utils.Constants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -36,6 +37,24 @@ class DeviceRepository(
     fun observeDevice(houseId: String, deviceId: String): Flow<Device?> =
         db.device(houseId, deviceId)
             .observeObject(Device::class.java) { device, key -> device.id = key }
+
+    /**
+     * Every device's event log for the house, keyed by device id.
+     *
+     * One listener on `/events/{houseId}` rather than one per device: the reporting screen needs
+     * all of them at once, and N listeners would fan out N round trips and emit N times per render.
+     */
+    fun observeAllEvents(houseId: String): Flow<Map<String, List<DeviceEvent>>> =
+        db.events(houseId).valueEvents().map { snapshot ->
+            snapshot.children.associate { deviceNode ->
+                val deviceId = deviceNode.key.orEmpty()
+                deviceId to deviceNode.children.mapNotNull { eventNode ->
+                    runCatching { eventNode.getValue(DeviceEvent::class.java) }
+                        .getOrNull()
+                        ?.also { it.id = eventNode.key.orEmpty() }
+                }
+            }
+        }
 
     fun observeEvents(houseId: String, deviceId: String): Flow<List<DeviceEvent>> =
         db.deviceEvents(houseId, deviceId)

@@ -19,6 +19,8 @@ import com.example.smarthomeapp.ui.screens.DeviceScreen
 import com.example.smarthomeapp.ui.screens.FloorScreen
 import com.example.smarthomeapp.ui.screens.HomeScreen
 import com.example.smarthomeapp.ui.screens.LoginScreen
+import com.example.smarthomeapp.ui.screens.ReportScreen
+import com.example.smarthomeapp.ui.screens.ScheduleScreen
 import com.example.smarthomeapp.viewmodel.AuthStatus
 import com.example.smarthomeapp.viewmodel.AuthViewModel
 import com.example.smarthomeapp.viewmodel.HomeViewModel
@@ -101,7 +103,21 @@ private fun AuthenticatedNavHost(
             )
         }
 
-        // Schedule and Report land with the next workstream; their routes already exist in Screen.
+        composable(
+            route = Screen.Schedule.route,
+            arguments = listOf(navArgument(Screen.ARG_DEVICE_ID) { type = NavType.StringType }),
+        ) { entry ->
+            ScheduleScreen(
+                deviceId = entry.requireArg(Screen.ARG_DEVICE_ID),
+                viewModel = homeViewModel,
+                onBack = navController::popBackStack,
+            )
+        }
+
+        composable(Screen.Report.route) {
+            // Its own ViewModel: the report reads /events, which no other screen needs.
+            ReportScreen(onBack = navController::popBackStack)
+        }
     }
 }
 

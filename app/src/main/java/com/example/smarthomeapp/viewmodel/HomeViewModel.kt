@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smarthomeapp.data.model.Alert
 import com.example.smarthomeapp.data.model.Device
+import com.example.smarthomeapp.data.model.DeviceSchedule
 import com.example.smarthomeapp.data.model.DeviceStatus
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.House
@@ -146,6 +147,11 @@ class HomeViewModel(
                 actorUid = authService.currentUid,
             )
         }
+    }
+
+    fun updateSchedule(deviceId: String, schedule: DeviceSchedule) {
+        val houseId = uiState.value.houseId ?: return
+        runAction { deviceRepository.updateSchedule(houseId, deviceId, schedule) }
     }
 
     fun updateMaxOnDuration(deviceId: String, seconds: Int) {
