@@ -1,6 +1,6 @@
 # Firebase setup
 
-One-time steps for project `smarthomeapp-c60d9`. Do these before anyone runs the app against real
+One-time steps for project `smarthomeapp-c60d9-77331`. Do these before anyone runs the app against real
 data — the client currently builds and launches fine but every read and write fails until step 1
 is done.
 

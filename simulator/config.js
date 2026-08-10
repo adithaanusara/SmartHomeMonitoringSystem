@@ -1,24 +1,25 @@
 /**
  * Firebase Web SDK configuration.
  *
- * Values below are copied from app/google-services.json, except the two marked TODO which only
- * exist once you register a Web app in the console (Project settings → Your apps → Add app → Web).
+ * `apiKey` and `appId` come from the **Web** app registration, not from the Android app. Firebase
+ * issues a separate key per platform — this one differs from the key in app/google-services.json —
+ * and the Android key can carry package-name/SHA-1 restrictions that a browser request cannot
+ * satisfy, failing with an API-key error that looks nothing like the real cause.
+ *
+ * The key is safe to commit: Firebase web API keys are public by design and ship in the source of
+ * every web app. The database rules are what protect the data.
  */
 export const firebaseConfig = {
-  apiKey: 'AIzaSyAatEFc7HiknLyb4u8sDHTuLtU1tLenbms',
-  authDomain: 'smarthomeapp-c60d9.firebaseapp.com',
+  apiKey: 'AIzaSyBdSSiBc-pfmnOeI7No7uC7zM6ZlFTnB1g',
 
-  // TODO: paste the databaseURL shown in the console once the Realtime Database exists.
-  // e.g. https://smarthomeapp-c60d9-default-rtdb.asia-southeast1.firebasedatabase.app
-  databaseURL: '',
+  authDomain: 'smarthomeapp-c60d9-77331.firebaseapp.com',
+  databaseURL:
+    'https://smarthomeapp-c60d9-77331-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'smarthomeapp-c60d9-77331',
+  storageBucket: 'smarthomeapp-c60d9-77331.firebasestorage.app',
+  messagingSenderId: '402335890171',
 
-  projectId: 'smarthomeapp-c60d9',
-  storageBucket: 'smarthomeapp-c60d9.firebasestorage.app',
-  messagingSenderId: '797898156562',
-
-  // TODO: paste the Web app's appId. Auth and Realtime Database work without it, so it is safe to
-  // leave blank while developing.
-  appId: '',
+  appId: '1:402335890171:web:736dbca650bd9d67700e5e',
 };
 
 /** Must match HOUSE_ID in the worker and the house key used by the app. */

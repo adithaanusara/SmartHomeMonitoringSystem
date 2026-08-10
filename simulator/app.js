@@ -72,11 +72,18 @@ function fatal(message) {
   el.houseView.hidden = true;
 }
 
-if (!firebaseConfig.databaseURL) {
+const missingConfig = ['apiKey', 'databaseURL', 'projectId'].filter(
+  (key) => !firebaseConfig[key],
+);
+
+if (missingConfig.length > 0) {
   fatal(
-    '<strong>Not configured yet.</strong><br />Set <code>databaseURL</code> in ' +
-      '<code>simulator/config.js</code> once the Realtime Database exists in the Firebase console. ' +
-      'See <code>firebase/README.md</code>.',
+    '<strong>Not configured yet.</strong><br />Missing <code>' +
+      missingConfig.join('</code>, <code>') +
+      '</code> in <code>simulator/config.js</code>.<br /><br />' +
+      'Register a <strong>Web</strong> app in Firebase console → Project settings → Your apps, ' +
+      'then copy <code>apiKey</code> and <code>appId</code> from it. The Android key will not ' +
+      'work in a browser.',
   );
 } else {
   start();
