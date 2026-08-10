@@ -197,21 +197,44 @@ Three decisions:
 - **A failed `/users/{uid}` profile write does not block sign-in** — it is logged instead. The user
   is already authenticated, and this is the path that fails while the database does not exist.
 
-**Dashboard**
-- [ ] `HomeScreen` — house summary, floor list, active-device count, unread alerts
-- [ ] `FloorScreen` — floor plan image with a grid overlay; devices positioned at `gridX`/`gridY`; tap to toggle, long-press for detail
-- [ ] Add / edit / delete floors
-- [ ] `FloorCard`, `DeviceCard`, `StatusBadge` components
-- [ ] `HomeViewModel`
+**Dashboard** — built, compiles and lints clean; **visuals not yet verified** (needs a signed-in session)
 
-**Device profiles** — each needs a visibly distinct UI, this is graded
-- [ ] Outlet — single toggle
-- [ ] Multi-switch — expandable card, N independently addressable channels, rolled-up unit status
-- [ ] Light — toggle plus schedule entry point
-- [ ] Hazard (iron) — toggle, `maxOnDuration` config, live countdown, prominent warning styling
-- [ ] Camera — snapshot grid, full-screen viewer, mock refresh cycle
-- [ ] `DeviceScreen` detail view dispatching on `type`
-- [ ] `DeviceViewModel`
+- [x] `HomeScreen` — summary tiles (active / devices / faults), unread alerts with acknowledge, floor list, add-floor dialog, empty state that offers to create a house
+- [x] `FloorScreen` — plan image with grid overlay, device markers at `gridX`/`gridY`, device list, delete-floor confirmation
+- [x] Add and delete floors (edit still to do)
+- [x] `FloorCard`, `DeviceCard`, `StatusBadge`, `AlertBanner`, `DeviceIcon` components
+- [x] `HomeViewModel` — house-scoped state, auth → user → house → floors/devices/alerts
+- [x] Two bundled vector floor plans + `FloorPlans.kt` name→drawable map
+
+**Device profiles** — all five built
+
+- [x] Outlet — single toggle
+- [x] Multi-switch — all-switches row plus N individually addressable channel rows
+- [x] Light — toggle plus schedule entry point and summary
+- [x] Hazard — toggle, `maxOnDuration` slider, live countdown with progress bar
+- [x] Camera — snapshot with a mock live-view refresh cycle via Coil
+- [x] `DeviceScreen` dispatching on `type`
+- [x] ~~`DeviceViewModel`~~ folded into `HomeViewModel` (see below)
+
+Decisions:
+
+- **One house-scoped ViewModel, not one per screen.** Home, Floor and Device all render slices of
+  the same `/devices` node; separate ViewModels would open duplicate listeners on identical paths
+  and could briefly disagree mid-update. It is hoisted above the `NavHost` so it is shared across
+  those three screens and cleared on sign-out. `DeviceViewModel.kt` was deleted.
+- **Status colours live outside the Material scheme.** The theme opts into dynamic colour, so
+  `primary` and `error` are whatever the wallpaper produced. ON must stay green and ERROR red on
+  every device. Status is always carried by text as well as colour.
+- **The grid is sized from `gridCols`/`gridRows`, not from the image.** Cells stay square and a
+  device lands in the same place at every screen size; sizing from the drawable would make markers
+  drift whenever a plan was swapped.
+- **`Resources.getIdentifier` avoided** for plan lookup — an explicit map fails at compile time
+  instead of runtime and survives R8 without keep rules.
+- **The hazard countdown is display only.** The authoritative timer is in the worker, because the
+  phone may be offline or killed exactly when the cutoff matters.
+
+Still to do in this workstream: `ScheduleScreen`, `ReportScreen` + `ReportViewModel`, floor editing,
+and long-press-to-toggle on the grid markers (currently tap opens detail).
 
 **Scheduling**
 - [ ] `ScheduleScreen` — time-range picker, day-of-week selection, enable toggle

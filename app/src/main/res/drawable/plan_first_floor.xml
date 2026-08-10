@@ -1,0 +1,61 @@
+<!-- Abstract first-floor plan, 4:3 to match the default 8x6 device grid. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- Floor slab -->
+    <path
+        android:fillColor="#F2F4F7"
+        android:pathData="M16,16 H784 V584 H16 Z" />
+
+    <!-- Room fills -->
+    <path
+        android:fillColor="#E8EDF4"
+        android:pathData="M16,16 H340 V260 H16 Z" />
+    <path
+        android:fillColor="#EDF1F6"
+        android:pathData="M340,16 H620 V260 H340 Z" />
+    <path
+        android:fillColor="#EAEFF5"
+        android:pathData="M620,16 H784 V260 H620 Z" />
+    <path
+        android:fillColor="#F0F3F8"
+        android:pathData="M16,340 H400 V584 H16 Z" />
+    <path
+        android:fillColor="#E9EEF5"
+        android:pathData="M400,340 H784 V584 H400 Z" />
+
+    <!-- Landing / corridor -->
+    <path
+        android:fillColor="#DDE4EE"
+        android:pathData="M16,260 H784 V340 H16 Z" />
+
+    <!-- Exterior wall -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#7E8B9E"
+        android:strokeWidth="14"
+        android:pathData="M16,16 H784 V584 H16 Z" />
+
+    <!-- Corridor walls, broken at each doorway -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#7E8B9E"
+        android:strokeWidth="9"
+        android:pathData="M16,260 H150 M230,260 H460 M540,260 H784" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#7E8B9E"
+        android:strokeWidth="9"
+        android:pathData="M16,340 H180 M260,340 H520 M600,340 H784" />
+
+    <!-- Room dividers -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#7E8B9E"
+        android:strokeWidth="9"
+        android:pathData="M340,16 V260 M620,16 V260 M400,340 V584" />
+
+</vector>
