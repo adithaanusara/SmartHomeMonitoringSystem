@@ -1,0 +1,18 @@
+{
+  "name": "smart-home-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-side safety cutoffs, schedule enforcement and heartbeat monitoring for the Smart Home Monitoring & Control system.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.2.0"
+  }
+}

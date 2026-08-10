@@ -1,0 +1,518 @@
+/* Control-room palette: dark surface, one accent, status carried by colour + shape.
+   Reads clearly on a projector and in a screen recording. */
+
+:root {
+  --bg: #0e1117;
+  --surface: #161b26;
+  --surface-2: #1e2532;
+  --border: #2a3242;
+  --text: #e6ebf5;
+  --muted: #8b97ad;
+  --accent: #5b8cff;
+
+  --on: #35d07f;
+  --off: #4a5468;
+  --error: #ff5c5c;
+  --disconnected: #ffa93b;
+
+  --radius: 12px;
+  --shadow: 0 8px 24px rgb(0 0 0 / 40%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The UA rule for [hidden] is only `display: none` at specificity (0,1,0), so any later class rule
+   that sets `display` — `.auth-view { display: grid }` below, for one — silently defeats it and the
+   element stays on screen. Everything here toggles visibility via the hidden attribute, so make it
+   win outright. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand h1 {
+  font-size: 18px;
+}
+
+.brand-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- pills and dots ---------- */
+
+.pill {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.pill-idle {
+  background: var(--surface-2);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.pill-live {
+  background: color-mix(in srgb, var(--on) 18%, transparent);
+  color: var(--on);
+  border-color: color-mix(in srgb, var(--on) 45%, transparent);
+}
+
+.pill-ON {
+  background: color-mix(in srgb, var(--on) 18%, transparent);
+  color: var(--on);
+  border-color: color-mix(in srgb, var(--on) 45%, transparent);
+}
+
+.pill-OFF {
+  background: var(--surface-2);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.pill-ERROR {
+  background: color-mix(in srgb, var(--error) 18%, transparent);
+  color: var(--error);
+  border-color: color-mix(in srgb, var(--error) 45%, transparent);
+}
+
+.pill-DISCONNECTED {
+  background: color-mix(in srgb, var(--disconnected) 18%, transparent);
+  color: var(--disconnected);
+  border-color: color-mix(in srgb, var(--disconnected) 45%, transparent);
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: baseline;
+}
+
+.dot-on {
+  background: var(--on);
+}
+.dot-off {
+  background: var(--off);
+}
+.dot-error {
+  background: var(--error);
+}
+.dot-disconnected {
+  background: var(--disconnected);
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: #26304066;
+  border-color: #3a465c;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #08101f;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #6f9bff;
+  border-color: #6f9bff;
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.btn-danger {
+  color: var(--error);
+  border-color: color-mix(in srgb, var(--error) 40%, transparent);
+}
+
+.btn-warn {
+  color: var(--disconnected);
+  border-color: color-mix(in srgb, var(--disconnected) 40%, transparent);
+}
+
+/* ---------- auth ---------- */
+
+.auth-view {
+  display: grid;
+  place-items: center;
+  padding: 64px 20px;
+}
+
+.auth-card {
+  width: min(400px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth-card input {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.auth-card input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.auth-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--error) 14%, transparent);
+  color: var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+}
+
+/* ---------- layout ---------- */
+
+main {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.legend-note {
+  margin-left: auto;
+}
+
+.floor {
+  margin-bottom: 32px;
+}
+
+.floor-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.floor-head h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.floor-head .count {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+/* ---------- device card ---------- */
+
+.device {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.device[data-status="ON"] {
+  border-color: color-mix(in srgb, var(--on) 40%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--on) 18%, transparent),
+    0 6px 18px color-mix(in srgb, var(--on) 10%, transparent);
+}
+
+.device[data-status="ERROR"] {
+  border-color: color-mix(in srgb, var(--error) 45%, var(--border));
+}
+
+.device[data-status="DISCONNECTED"] {
+  border-color: color-mix(in srgb, var(--disconnected) 40%, var(--border));
+  opacity: 0.82;
+}
+
+.device-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.device-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.device-type {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Appliance glyph — the "physical" thing, so its state must be readable at a glance. */
+.appliance {
+  display: grid;
+  place-items: center;
+  height: 76px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 34px;
+  filter: grayscale(1) brightness(0.6);
+  transition: filter 200ms ease, background 200ms ease, box-shadow 200ms ease;
+}
+
+.device[data-status="ON"] .appliance {
+  filter: none;
+  background: radial-gradient(
+    circle at 50% 55%,
+    color-mix(in srgb, var(--on) 22%, transparent),
+    transparent 70%
+  );
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--on) 22%, transparent);
+}
+
+.device[data-status="ERROR"] .appliance {
+  filter: grayscale(0.3);
+  background: radial-gradient(
+    circle at 50% 55%,
+    color-mix(in srgb, var(--error) 20%, transparent),
+    transparent 70%
+  );
+}
+
+.appliance img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 9px;
+}
+
+/* Channels */
+
+.channels {
+  display: grid;
+  gap: 6px;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.channel-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.channel-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--off);
+  flex: none;
+}
+
+.led[data-on="true"] {
+  background: var(--on);
+  box-shadow: 0 0 8px var(--on);
+}
+
+/* Countdown */
+
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--disconnected) 12%, transparent);
+  color: var(--disconnected);
+  border: 1px solid color-mix(in srgb, var(--disconnected) 30%, transparent);
+}
+
+.countdown[data-critical="true"] {
+  background: color-mix(in srgb, var(--error) 14%, transparent);
+  color: var(--error);
+  border-color: color-mix(in srgb, var(--error) 35%, transparent);
+}
+
+/* Actions */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.actions .btn {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stale {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- misc ---------- */
+
+.empty,
+.fatal {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 20px;
+}
+
+.fatal {
+  margin: 24px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+  color: var(--text);
+  text-align: left;
+  padding: 20px 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

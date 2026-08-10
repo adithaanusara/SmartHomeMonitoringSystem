@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hardware Simulator — Smart Home</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>&#127968;</text></svg>"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <div>
+          <h1>Hardware Simulator</h1>
+          <p class="brand-sub">Physical appliance layer &middot; Smart Home Monitoring &amp; Control</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span id="link-state" class="pill pill-idle">Offline</span>
+        <button id="sign-out" class="btn btn-ghost" hidden>Sign out</button>
+      </div>
+    </header>
+
+    <!-- Shown until a simulator account is signed in. The security rules restrict every node to
+         members of the house, so the simulator authenticates like any other client. -->
+    <main id="auth-view" class="auth-view" hidden>
+      <form id="auth-form" class="auth-card">
+        <h2>Simulator sign-in</h2>
+        <p class="muted">
+          Use an account that is a member of <code id="auth-house"></code>.
+        </p>
+        <label>
+          Email
+          <input id="auth-email" type="email" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <input id="auth-password" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="auth-error" class="auth-error" hidden></p>
+        <button id="auth-submit" class="btn btn-primary" type="submit">Connect</button>
+      </form>
+    </main>
+
+    <!-- Shown once signed in. -->
+    <main id="house-view" hidden>
+      <section class="legend">
+        <span><i class="dot dot-on"></i> On</span>
+        <span><i class="dot dot-off"></i> Off</span>
+        <span><i class="dot dot-error"></i> Error</span>
+        <span><i class="dot dot-disconnected"></i> Disconnected</span>
+        <span class="legend-note" id="heartbeat-note"></span>
+      </section>
+
+      <div id="floors"></div>
+
+      <p id="empty-state" class="empty" hidden>
+        No devices under <code></code>. Import <code>firebase/seed-data.json</code> first.
+      </p>
+    </main>
+
+    <!-- Config errors surface here rather than only in the console. -->
+    <div id="fatal" class="fatal" hidden></div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
