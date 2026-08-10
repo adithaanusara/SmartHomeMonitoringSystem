@@ -197,7 +197,7 @@ Three decisions:
 - **A failed `/users/{uid}` profile write does not block sign-in** — it is logged instead. The user
   is already authenticated, and this is the path that fails while the database does not exist.
 
-**Dashboard** — built, compiles and lints clean; **visuals not yet verified** (needs a signed-in session)
+**Dashboard** — built and **verified rendering against live data** on a Pixel 6 AVD
 
 - [x] `HomeScreen` — summary tiles (active / devices / faults), unread alerts with acknowledge, floor list, add-floor dialog, empty state that offers to create a house
 - [x] `FloorScreen` — plan image with grid overlay, device markers at `gridX`/`gridY`, device list, delete-floor confirmation
@@ -232,6 +232,30 @@ Decisions:
   instead of runtime and survives R8 without keep rules.
 - **The hazard countdown is display only.** The authoritative timer is in the worker, because the
   phone may be offline or killed exactly when the cutoff matters.
+
+**First real render — what was confirmed against the live database:**
+
+- Sign-in → dashboard showing "Demo Residence", 4 active / 10 devices / 0 faults, matching the seed
+- The safety alert from the worker's cutoff test appears with an Acknowledge action
+- Both floors listed with plan thumbnails and correct per-floor counts (6·2 on, 4·2 on)
+- Floor plan with the 8×6 grid overlay, all six ground-floor devices at their `gridX`/`gridY`,
+  green rings on the two that are ON
+- Per-profile subtitles correct: "3 switches · 0 on", "Auto-off after 15m", "Scheduled 18:30–23:00"
+- Multi-switch detail: all-switches row over ch1/ch2/ch3 with labels
+- Hazard detail: green ON header, "Switches off automatically in 14m 56s" with progress bar,
+  max-on-duration slider
+- Camera detail: Coil loaded the mock snapshot over the network, live-view toggle present
+- **Write path**: one tap on a channel switch → exactly one `/events` entry with
+  `source: APP` and the correct `actorUid`, unit status rolled up correctly
+
+Two observations from the run:
+
+- **First load after sign-in took ~15s.** Cold Firebase connection to Singapore on an emulator, and
+  `combine` waits for all four nodes to emit before the first frame. Real devices will be faster,
+  but a skeleton or per-section loading would feel better than one full-screen spinner.
+- Three duplicate events appeared during an early manual test. Investigated and traced to stray
+  duplicate touches from the test automation, not the app — a controlled single tap produced
+  exactly one event.
 
 Still to do in this workstream: `ScheduleScreen`, `ReportScreen` + `ReportViewModel`, floor editing,
 and long-press-to-toggle on the grid markers (currently tap opens detail).
