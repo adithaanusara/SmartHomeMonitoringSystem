@@ -1,0 +1,168 @@
+{
+  "houses": {
+    "demo-house": {
+      "name": "Demo Residence",
+      "ownerUid": "REPLACE_WITH_YOUR_UID",
+      "members": {
+        "REPLACE_WITH_YOUR_UID": "owner"
+      }
+    }
+  },
+
+  "users": {
+    "REPLACE_WITH_YOUR_UID": {
+      "displayName": "Demo Owner",
+      "email": "demo@example.com",
+      "houses": {
+        "demo-house": true
+      }
+    }
+  },
+
+  "floors": {
+    "demo-house": {
+      "ground": {
+        "name": "Ground Floor",
+        "level": 0,
+        "planImageAsset": "plan_ground_floor",
+        "gridCols": 8,
+        "gridRows": 6
+      },
+      "first": {
+        "name": "First Floor",
+        "level": 1,
+        "planImageAsset": "plan_first_floor",
+        "gridCols": 8,
+        "gridRows": 6
+      }
+    }
+  },
+
+  "devices": {
+    "demo-house": {
+      "living-outlet": {
+        "floorId": "ground",
+        "name": "Living Room Outlet",
+        "type": "OUTLET",
+        "gridX": 1,
+        "gridY": 1,
+        "status": "OFF",
+        "lastSeen": 0
+      },
+      "kitchen-outlet": {
+        "floorId": "ground",
+        "name": "Kitchen Outlet",
+        "type": "OUTLET",
+        "gridX": 5,
+        "gridY": 1,
+        "status": "ON",
+        "lastSeen": 0
+      },
+      "living-lights": {
+        "floorId": "ground",
+        "name": "Living Room Lights",
+        "type": "LIGHT",
+        "gridX": 2,
+        "gridY": 3,
+        "status": "OFF",
+        "lastSeen": 0,
+        "schedule": {
+          "enabled": true,
+          "onAt": "18:30",
+          "offAt": "23:00",
+          "days": [1, 2, 3, 4, 5, 6, 7]
+        }
+      },
+      "kitchen-gangbox": {
+        "floorId": "ground",
+        "name": "Kitchen Gang Box",
+        "type": "MULTI_SWITCH",
+        "gridX": 6,
+        "gridY": 3,
+        "status": "OFF",
+        "lastSeen": 0,
+        "channels": {
+          "ch1": { "label": "Ceiling Light", "status": "OFF" },
+          "ch2": { "label": "Exhaust Fan", "status": "OFF" },
+          "ch3": { "label": "Counter Strip", "status": "OFF" }
+        }
+      },
+      "front-door-cam": {
+        "floorId": "ground",
+        "name": "Front Door Camera",
+        "type": "CAMERA",
+        "gridX": 0,
+        "gridY": 5,
+        "status": "ON",
+        "lastSeen": 0,
+        "camera": {
+          "snapshotUrl": "https://picsum.photos/seed/frontdoor/640/360",
+          "streamUrl": "https://picsum.photos/seed/frontdoor-stream/640/360"
+        }
+      },
+      "laundry-iron": {
+        "floorId": "ground",
+        "name": "Laundry Iron",
+        "type": "HAZARD",
+        "gridX": 7,
+        "gridY": 5,
+        "status": "OFF",
+        "lastSeen": 0,
+        "safety": {
+          "maxOnDurationSec": 900,
+          "onSince": null
+        }
+      },
+      "bedroom-lights": {
+        "floorId": "first",
+        "name": "Bedroom Lights",
+        "type": "LIGHT",
+        "gridX": 2,
+        "gridY": 1,
+        "status": "OFF",
+        "lastSeen": 0,
+        "schedule": {
+          "enabled": false,
+          "onAt": "19:00",
+          "offAt": "22:30",
+          "days": [1, 2, 3, 4, 5]
+        }
+      },
+      "bedroom-outlet": {
+        "floorId": "first",
+        "name": "Bedroom Outlet",
+        "type": "OUTLET",
+        "gridX": 4,
+        "gridY": 1,
+        "status": "OFF",
+        "lastSeen": 0
+      },
+      "hallway-gangbox": {
+        "floorId": "first",
+        "name": "Hallway Gang Box",
+        "type": "MULTI_SWITCH",
+        "gridX": 3,
+        "gridY": 4,
+        "status": "ON",
+        "lastSeen": 0,
+        "channels": {
+          "ch1": { "label": "Hall Light", "status": "ON" },
+          "ch2": { "label": "Stair Light", "status": "OFF" }
+        }
+      },
+      "landing-cam": {
+        "floorId": "first",
+        "name": "Landing Camera",
+        "type": "CAMERA",
+        "gridX": 6,
+        "gridY": 4,
+        "status": "ON",
+        "lastSeen": 0,
+        "camera": {
+          "snapshotUrl": "https://picsum.photos/seed/landing/640/360",
+          "streamUrl": "https://picsum.photos/seed/landing-stream/640/360"
+        }
+      }
+    }
+  }
+}
