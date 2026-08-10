@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "797898156562",
-    "project_id": "smarthomeapp-c60d9",
-    "storage_bucket": "smarthomeapp-c60d9.firebasestorage.app"
+    "project_number": "402335890171",
+    "firebase_url": "https://smarthomeapp-c60d9-77331-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smarthomeapp-c60d9-77331",
+    "storage_bucket": "smarthomeapp-c60d9-77331.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:797898156562:android:eb5cc666d3addc53d406cb",
+        "mobilesdk_app_id": "1:402335890171:android:e4d4e81eec357c91700e5e",
         "android_client_info": {
           "package_name": "com.example.smarthomeapp"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAatEFc7HiknLyb4u8sDHTuLtU1tLenbms"
+          "current_key": "AIzaSyBjoyLv0-9-Uuu3_OOCkA4F7W1QFPVZqdM"
         }
       ],
       "services": {

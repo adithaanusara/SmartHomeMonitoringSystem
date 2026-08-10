@@ -2,15 +2,16 @@
   "houses": {
     "demo-house": {
       "name": "Demo Residence",
-      "ownerUid": "REPLACE_WITH_YOUR_UID",
+      "ownerUid": "MJgBRX8HWjeAcPX2Iyow3ktbBKt1",
       "members": {
-        "REPLACE_WITH_YOUR_UID": "owner"
+        "MJgBRX8HWjeAcPX2Iyow3ktbBKt1": "owner",
+        "nLYTvDh4ZCatqD9BEUcHPhaOQtx2": "member"
       }
     }
   },
 
   "users": {
-    "REPLACE_WITH_YOUR_UID": {
+    "MJgBRX8HWjeAcPX2Iyow3ktbBKt1": {
       "displayName": "Demo Owner",
       "email": "demo@example.com",
       "houses": {

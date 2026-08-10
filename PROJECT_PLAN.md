@@ -59,7 +59,7 @@ its version is tied to the AGP version. Bumping AGP is the only way to move the 
 
 ### Outstanding — these need Firebase console access, not code
 
-7. **The Realtime Database does not exist yet.** Verified: `smarthomeapp-c60d9-default-rtdb` returns
+7. **The Realtime Database does not exist yet.** Verified: `smarthomeapp-c60d9-77331-default-rtdb` returns
    404 on `firebaseio.com`, `asia-southeast1`, and `europe-west1`. `google-services.json` has no
    `firebase_url` key, which is the tell.
 

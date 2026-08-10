@@ -3,7 +3,7 @@
 **Status: frozen after Phase 0.** Changes require a group decision, because the Android client,
 the web simulator, and the safety worker all read and write these exact paths.
 
-Firebase project: `smarthomeapp-c60d9`
+Firebase project: `smarthomeapp-c60d9-77331`
 
 ---
 
