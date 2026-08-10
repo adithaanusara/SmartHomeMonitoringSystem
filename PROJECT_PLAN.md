@@ -173,10 +173,29 @@ Three decisions worth knowing before building on this:
   roll-up and the `/events` entry. A partial write would leave a hazard device ON with no `onSince`
   — precisely the state the worker cannot protect against.
 
-**Auth & navigation**
-- [ ] `LoginScreen` with validation and error states
-- [ ] `AuthViewModel`
-- [ ] `Screen` sealed class + `AppNavigation` with auth-gated start destination
+**Auth & navigation** — done, verified on the emulator
+
+- [x] `AuthViewModel` — `AuthFormState` with deferred validation, `AuthStatus` (Loading/SignedOut/SignedIn), sign-in, sign-up, password reset, sign-out
+- [x] `LoginScreen` — stateless `LoginContent` inside a thin stateful wrapper, so it previews and tests without Firebase
+- [x] `Screen` sealed class with typed route builders for all six destinations
+- [x] `AppNavigation` — auth-gated, with a loading state while Firebase resolves
+- [x] `MainActivity` wired to `AppNavigation`; `HomeScreen` is a marked placeholder for the dashboard workstream
+
+Verified on a Pixel 6 AVD: login renders, empty-submit shows field errors, `imePadding` lifts the
+form above the keyboard, and a real sign-in attempt surfaces the mapped provider error.
+
+Three decisions:
+
+- **Login and the authenticated graph are separate trees, not two destinations in one `NavHost`.**
+  Swapping the whole tree on sign-out discards the authenticated back stack outright, so Back can
+  never re-enter a signed-out user's dashboard.
+- **Validation errors stay hidden until the first submit** (`showValidation`), so the form is not
+  red on arrival.
+- **Firebase errors are mapped to user-facing text**, including `CONFIGURATION_NOT_FOUND` →
+  "Email/password sign-in is not enabled for this Firebase project yet", which is the exact state
+  the project is in right now.
+- **A failed `/users/{uid}` profile write does not block sign-in** — it is logged instead. The user
+  is already authenticated, and this is the path that fails while the database does not exist.
 
 **Dashboard**
 - [ ] `HomeScreen` — house summary, floor list, active-device count, unread alerts
