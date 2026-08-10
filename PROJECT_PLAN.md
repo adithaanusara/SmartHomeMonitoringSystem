@@ -260,15 +260,35 @@ Two observations from the run:
 Still to do in this workstream: `ScheduleScreen`, `ReportScreen` + `ReportViewModel`, floor editing,
 and long-press-to-toggle on the grid markers (currently tap opens detail).
 
-**Scheduling**
-- [ ] `ScheduleScreen` — time-range picker, day-of-week selection, enable toggle
-- [ ] Max-on-duration config for hazard devices
-- [ ] Writes to `/devices/.../schedule`; **all enforcement is the worker's job**
+**Scheduling** — built and verified end-to-end
 
-**Reporting**
-- [ ] `ReportViewModel` — fold `/events` into per-device on-duration and switch counts
-- [ ] `ReportScreen` — per-device usage bars, daily totals, most-used device, alert history
-- [ ] Date-range filter
+- [x] `ScheduleScreen` — enable toggle, Material3 24h time pickers, day-of-week chips, live summary
+- [x] Max-on-duration config for hazard devices (on `DeviceScreen`)
+- [x] Writes to `/devices/.../schedule`; **all enforcement is the worker's job**
+- [x] Verified: edited Bedroom Lights in the app → `{"days":[1,2,3,4,5,6],"enabled":true,…}` in the database
+
+Edits are held in a local buffer until Save, so a half-configured window is never live. The buffer
+is seeded on the device's first arrival and keyed on its id — re-seeding on every database emission
+would wipe edits in progress.
+
+**Reporting** — built and verified end-to-end
+
+- [x] `UsageCalculator` — pure, clock-free fold of `/events` into on-duration, switch-ons and automatic cut-offs
+- [x] **17 JVM unit tests** covering partial overlaps, still-on intervals, out-of-order events, worker vs manual switch-offs, and rounding
+- [x] `ReportViewModel` — resolves its own house, combines devices + all events + alerts with the range filter
+- [x] `DeviceRepository.observeAllEvents` — one listener on `/events/{houseId}` rather than one per device
+- [x] `ReportScreen` — stat tiles, most-used card, per-device bars, alert history
+- [x] Today / 7 days / 30 days filter
+
+Visualization choices: totals are **stat tiles**, not a chart — a single number reads faster as a
+number. The per-device comparison is a **single-series magnitude bar chart**, so it needs no legend
+(the section title names the measure) and no second hue; each bar is directly labelled because
+there is no axis to read against, and the full-width track keeps a short bar reading as "small
+share of peak" rather than as a glitch.
+
+`formatOnDuration` rounds rather than truncates. Truncating made rows fail to add up to their
+total — 17m43s and 29s rendered as "17m" and "0m" beside a total of "18m", because the total is
+summed in milliseconds before formatting.
 
 **Alerts**
 - [ ] Observe `/alerts`; in-app banner or notification for safety cutoffs
