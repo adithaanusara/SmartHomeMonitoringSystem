@@ -9,13 +9,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.smarthomeapp.ui.screens.DeviceScreen
+import com.example.smarthomeapp.ui.screens.FloorScreen
 import com.example.smarthomeapp.ui.screens.HomeScreen
 import com.example.smarthomeapp.ui.screens.LoginScreen
 import com.example.smarthomeapp.viewmodel.AuthStatus
 import com.example.smarthomeapp.viewmodel.AuthViewModel
+import com.example.smarthomeapp.viewmodel.HomeViewModel
 
 /**
  * Root of the UI.
@@ -31,7 +37,7 @@ fun AppNavigation(
 ) {
     val authStatus by authViewModel.authStatus.collectAsStateWithLifecycle()
 
-    when (val status = authStatus) {
+    when (authStatus) {
         AuthStatus.Loading -> LoadingScreen(modifier)
 
         AuthStatus.SignedOut -> LoginScreen(
@@ -40,7 +46,6 @@ fun AppNavigation(
         )
 
         is AuthStatus.SignedIn -> AuthenticatedNavHost(
-            displayName = status.displayName,
             onSignOut = authViewModel::signOut,
             modifier = modifier,
         )
@@ -49,11 +54,14 @@ fun AppNavigation(
 
 @Composable
 private fun AuthenticatedNavHost(
-    displayName: String,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val navController = rememberNavController()
+
+    // Hoisted above the NavHost so the dashboard, the floor plan and the device screen share one
+    // set of database listeners instead of opening three against the same paths.
+    val homeViewModel: HomeViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -62,15 +70,44 @@ private fun AuthenticatedNavHost(
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
-                displayName = displayName,
+                viewModel = homeViewModel,
+                onOpenFloor = { floorId -> navController.navigate(Screen.Floor.route(floorId)) },
+                onOpenReport = { navController.navigate(Screen.Report.route) },
                 onSignOut = onSignOut,
             )
         }
 
-        // Floor, Device, Schedule, Camera and Report are registered as the dashboard work lands.
-        // Screen.kt already defines their routes and argument keys.
+        composable(
+            route = Screen.Floor.route,
+            arguments = listOf(navArgument(Screen.ARG_FLOOR_ID) { type = NavType.StringType }),
+        ) { entry ->
+            FloorScreen(
+                floorId = entry.requireArg(Screen.ARG_FLOOR_ID),
+                viewModel = homeViewModel,
+                onBack = navController::popBackStack,
+                onOpenDevice = { id -> navController.navigate(Screen.Device.route(id)) },
+            )
+        }
+
+        composable(
+            route = Screen.Device.route,
+            arguments = listOf(navArgument(Screen.ARG_DEVICE_ID) { type = NavType.StringType }),
+        ) { entry ->
+            DeviceScreen(
+                deviceId = entry.requireArg(Screen.ARG_DEVICE_ID),
+                viewModel = homeViewModel,
+                onBack = navController::popBackStack,
+                onOpenSchedule = { id -> navController.navigate(Screen.Schedule.route(id)) },
+            )
+        }
+
+        // Schedule and Report land with the next workstream; their routes already exist in Screen.
     }
 }
+
+/** Route arguments are declared non-null in the graph, so a missing one is a wiring bug. */
+private fun NavBackStackEntry.requireArg(key: String): String =
+    checkNotNull(arguments?.getString(key)) { "Missing route argument '$key'" }
 
 @Composable
 private fun LoadingScreen(modifier: Modifier = Modifier) {
