@@ -232,16 +232,31 @@ Three decisions:
 - [ ] Offline behaviour — `setPersistenceEnabled(true)` and a connectivity indicator
 - [ ] Dark theme check, edge-to-edge insets, rotation survival
 
-### Phase 2 — Web hardware simulator
+### Phase 2 — Web hardware simulator — built, rendering verified
 
-- [ ] `simulator/index.html` + Firebase Web SDK (compat CDN is fine)
-- [ ] Anonymous auth or a dedicated simulator account
-- [ ] Subscribes to `/devices/{houseId}` and renders the house
-- [ ] Visual appliance states — lamp glows, outlet LED, iron heat indicator, camera tile
-- [ ] Multi-switch gang box rendering with per-channel indicators
-- [ ] Heartbeat: write `lastSeen` every ~10s per device
-- [ ] Fault injection buttons — force `ERROR`, force `DISCONNECTED`, simulate an externally-driven ON. **This is how you prove externally-driven updates reach the phone without a refresh.**
-- [ ] Deploy to Firebase Hosting (free tier) so it has a shareable URL for the video
+- [x] `simulator/index.html` + Firebase Web SDK 12.17.1 as ES modules from CDN, no build step
+- [x] Dedicated simulator account (not anonymous — keeps one membership model across all three programs)
+- [x] Subscribes to `/devices/{houseId}` and `/floors/{houseId}`, renders grouped by floor
+- [x] Visual appliance states — glow on ON, greyscale when off, camera snapshot tiles
+- [x] Gang box rendering with per-channel LEDs and per-channel toggles
+- [x] Heartbeat: one multi-path write of `lastSeen` for all devices every 10s
+- [x] Fault injection — **Switch on/off**, **Fault**, **Cut beat**
+- [x] Live countdown to the worker's safety cutoff on hazard devices
+- [x] `firebase.json` for `firebase deploy` (hosting + database rules)
+- [ ] Fill in `databaseURL` and `appId` in `simulator/config.js`, then deploy
+
+### Phase 3 — Server-side safety worker — built, logic tested
+
+- [x] Node 22+ / `firebase-admin` 14.2.0, ES modules, no build step
+- [x] `src/safetyWatcher.js` — max-duration cutoff, re-arms from `onSince` on restart
+- [x] `src/scheduleRunner.js` — edge-triggered `onAt` / `offAt`
+- [x] `src/heartbeatMonitor.js` — marks `DISCONNECTED` after 30s of silence
+- [x] All worker-driven changes appended to `/events` with `source: WORKER` / `SCHEDULE`
+- [x] Atomic multi-path writes so status, `onSince`, event and alert land together
+- [x] Structured colour-coded logging, with the cutoff on its own ALERT level for the video
+- [x] `.env` and `service-account.json` gitignored
+- [x] 16 unit tests over the schedule window logic, passing
+- [ ] Add `FIREBASE_DATABASE_URL` and `service-account.json`, then `npm start`
 
 ### Phase 3 — Server-side safety worker
 

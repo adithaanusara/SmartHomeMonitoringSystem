@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+
+# Service-account credentials grant full admin access to the Firebase project.
+# These must never be committed.
+service-account.json
+*-service-account.json
+.env
