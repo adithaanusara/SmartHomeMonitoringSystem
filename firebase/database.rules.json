@@ -1,0 +1,93 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "email": { ".validate": "newData.isString()" },
+        "displayName": { ".validate": "newData.isString()" },
+        "houses": {
+          "$houseId": { ".validate": "newData.isBoolean()" }
+        }
+      }
+    },
+
+    "houses": {
+      "$houseId": {
+        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (!data.exists() ? newData.child('ownerUid').val() === auth.uid : data.child('members').child(auth.uid).exists())",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "ownerUid": { ".validate": "newData.isString()" }
+      }
+    },
+
+    "floors": {
+      "$houseId": {
+        ".read": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        "$floorId": {
+          "level": { ".validate": "newData.isNumber()" },
+          "gridCols": { ".validate": "newData.isNumber() && newData.val() > 0" },
+          "gridRows": { ".validate": "newData.isNumber() && newData.val() > 0" }
+        }
+      }
+    },
+
+    "devices": {
+      "$houseId": {
+        ".read": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        "$deviceId": {
+          "type": {
+            ".validate": "newData.isString() && newData.val().matches(/^(OUTLET|MULTI_SWITCH|LIGHT|HAZARD|CAMERA)$/)"
+          },
+          "status": {
+            ".validate": "newData.isString() && newData.val().matches(/^(ON|OFF|ERROR|DISCONNECTED)$/)"
+          },
+          "lastSeen": { ".validate": "newData.isNumber()" },
+          "channels": {
+            "$channelId": {
+              "status": {
+                ".validate": "newData.isString() && newData.val().matches(/^(ON|OFF|ERROR|DISCONNECTED)$/)"
+              }
+            }
+          },
+          "safety": {
+            "maxOnDurationSec": { ".validate": "newData.isNumber() && newData.val() > 0" },
+            "onSince": { ".validate": "newData.isNumber() || newData.val() === null" }
+          }
+        }
+      }
+    },
+
+    "events": {
+      "$houseId": {
+        ".read": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        "$deviceId": {
+          "$eventId": {
+            ".write": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists() && !data.exists()",
+            ".validate": "newData.hasChildren(['ts', 'from', 'to', 'source'])",
+            "source": {
+              ".validate": "newData.isString() && newData.val().matches(/^(APP|SIMULATOR|WORKER|SCHEDULE)$/)"
+            }
+          }
+        }
+      }
+    },
+
+    "alerts": {
+      "$houseId": {
+        ".read": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+        "$alertId": {
+          "acknowledged": {
+            ".write": "auth != null && root.child('houses').child($houseId).child('members').child(auth.uid).exists()",
+            ".validate": "newData.isBoolean()"
+          }
+        }
+      }
+    }
+  }
+}

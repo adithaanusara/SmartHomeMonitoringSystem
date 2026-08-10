@@ -143,20 +143,35 @@ Design notes that will save you rework:
 - [x] Resolve the compileSdk / AGP / Gradle version conflicts
 - [x] Clean build produces a debug APK; installs and launches on a Pixel 6 AVD
 - [x] Commit the agreed schema as `docs/SCHEMA.md` — this is your team's contract
-- [ ] **Create the Realtime Database in the Firebase console, then re-download `google-services.json`** ← blocks the whole data layer
-- [ ] Write auth-scoped security rules
+- [x] Write auth-scoped security rules → `firebase/database.rules.json`
+- [x] Write seed data covering one house, two floors, and ten devices across all five profiles → `firebase/seed-data.json`
+- [ ] **Create the Realtime Database in the console, then re-download `google-services.json`** ← still blocks all runtime testing
+- [ ] Enable the Email/Password sign-in provider
+- [ ] Publish the security rules and import the seed — see `firebase/README.md`
 - [ ] Confirm the build on the other two members' machines
-- [ ] Write a seed script that populates one house, two floors, and ~10 devices covering every type
 - [ ] Agree branch strategy (`feat/<area>`) and that `main` always builds
 
 ### Phase 1 — Android client
 
-**Data layer**
-- [ ] `DeviceType`, `DeviceStatus` enums; `Device`, `Floor`, `House`, `Room`, `User` data classes (no-arg constructors + defaults — RTDB deserialisation requires them)
-- [ ] `FirebaseAuthService` — email/password sign-in, sign-up, sign-out, current-user flow
-- [ ] `FirebaseDatabaseService` — generic `observeValue`/`observeList` returning `Flow` via `callbackFlow`, plus write helpers
-- [ ] `UserRepository`, `HouseRepository`, `DeviceRepository` exposing `Flow`s
-- [ ] Delete `FirebaseStorageService.kt`
+**Data layer** — done, compiles clean
+
+- [x] `DeviceStatus`, `DeviceType`, `EventSource`, `AlertKind` enums, each with a lenient `from()`
+- [x] `Device` (+ `DeviceChannel`, `DeviceSafety`, `DeviceSchedule`, `CameraConfig`), `Floor`, `House`, `User`, `DeviceEvent`, `Alert`
+- [x] `FirebaseAuthService` — sign-in, sign-up, password reset, sign-out, `authState()` flow
+- [x] `FirebaseDatabaseService` — path builders, `valueEvents()` listener-to-Flow bridge, `observeObject`/`observeChildren`, atomic multi-path update
+- [x] `UserRepository`, `HouseRepository`, `DeviceRepository`
+- [x] Deleted `FirebaseStorageService.kt` and `Room.kt`
+
+Three decisions worth knowing before building on this:
+
+- **Enums are stored as strings, not Kotlin enums.** The Firebase mapper throws on an unrecognised
+  constant, and two of the three writers to `/devices` are untyped JavaScript. Read them through
+  `device.deviceType` / `device.effectiveStatus`, which fall back rather than crash the screen.
+- **`Room` was dropped.** The schema places devices on a floor grid directly, so a room entity added
+  a nesting level for no marks. The plan listed it before the schema existed; the schema wins.
+- **Every toggle is one atomic multi-path update** covering status, `safety/onSince`, channel
+  roll-up and the `/events` entry. A partial write would leave a hazard device ON with no `onSince`
+  — precisely the state the worker cannot protect against.
 
 **Auth & navigation**
 - [ ] `LoginScreen` with validation and error states
