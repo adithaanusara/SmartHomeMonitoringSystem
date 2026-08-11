@@ -1,3 +1,20 @@
+import java.util.Properties
+
+/**
+ * Release signing credentials, kept out of the repository.
+ *
+ * When keystore.properties is absent — a teammate's fresh clone, or CI — the release build simply
+ * has no signing config and produces an unsigned APK, rather than failing the whole configuration
+ * phase and taking debug builds down with it.
+ */
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val hasReleaseSigning = keystorePropertiesFile.exists()
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -22,10 +39,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
+            // R8 shrinking and obfuscation. The Firebase model classes are held by the keep rules
+            // in src/main/keepRules — without those, reflective deserialisation silently returns
+            // empty objects in release only.
             optimization {
-                enable = false
+                enable = true
             }
         }
     }

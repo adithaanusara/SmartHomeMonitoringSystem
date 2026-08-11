@@ -1,12 +1,39 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# R8 keep rules. AGP combines every *.keep file in src/main/keepRules and passes them to R8.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ---------------------------------------------------------------- Firebase data models
+#
+# The Realtime Database maps snapshots onto these classes reflectively: getValue(Device::class.java)
+# matches JSON keys against getter/setter names. R8 renames those members by default, so without
+# this every device would deserialise to a default-constructed object with no fields set — the app
+# would run, show an empty dashboard, and give no clue why.
+#
+# Keeping the whole package rather than listing classes so a new model cannot be added and silently
+# broken in release only.
+-keep class com.example.smarthomeapp.data.model.** { *; }
+-keepclassmembers class com.example.smarthomeapp.data.model.** {
+    <init>();
+    *;
+}
+
+# Generic signatures are required to resolve Map<String, DeviceChannel> and List<Int> fields.
+-keepattributes Signature, InnerClasses, EnclosingMethod, *Annotation*
+
+# @IgnoreExtraProperties / @Exclude / @PropertyName are read at runtime.
+-keep class com.google.firebase.database.IgnoreExtraProperties
+-keep class com.google.firebase.database.Exclude
+-keep class com.google.firebase.database.PropertyName
+
+# ---------------------------------------------------------------- Enums
+#
+# Status and type values are resolved from strings via entries/valueOf.
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ---------------------------------------------------------------- Noise
+#
+# Firebase pulls in optional Google HTTP client pieces that are not on the Android classpath.
+-dontwarn org.apache.http.**
+-dontwarn android.net.http.AndroidHttpClient
+-dontwarn com.google.android.gms.**
