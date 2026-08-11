@@ -344,7 +344,10 @@ summed in milliseconds before formatting.
 
 ### Phase 4 — Deliverables
 
-- [ ] **APK** — signed release build, uploaded, link in the README
+- [x] **APK** — signed release build, R8-shrunk to **2.6 MB** (from 22 MB debug), verified running
+      on a Pixel 6 AVD: sign-in, dashboard, floor grid, and nested `channels` / `safety` / `schedule`
+      objects all deserialise correctly under obfuscation
+- [ ] Upload it and put the link in the README (placeholder `RELEASE_URL_HERE`)
 - [ ] **Technical report** covering exactly the three topics the spec names: the synchronisation mechanism, floor representation, and simulator operations. Include the schema, a component diagram, and a sync sequence diagram
 - [ ] **README** — setup steps, Firebase config, how to run simulator and worker, APK link, team contributions
 - [ ] **Demo video, ≤25 min** — all three members on camera, each introducing themselves and their own contribution
