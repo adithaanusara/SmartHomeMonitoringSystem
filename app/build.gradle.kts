@@ -53,12 +53,17 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release")
-            // R8 shrinking and obfuscation. The Firebase model classes are held by the keep rules
-            // in src/main/keepRules — without those, reflective deserialisation silently returns
-            // empty objects in release only.
-            optimization {
-                enable = true
-            }
+
+            // R8 shrinking and obfuscation
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile(
+                    "proguard-android-optimize.txt"
+                ),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
