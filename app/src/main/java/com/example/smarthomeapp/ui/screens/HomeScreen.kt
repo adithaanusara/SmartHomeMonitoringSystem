@@ -25,7 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,16 +40,18 @@ import com.example.smarthomeapp.ui.components.AlertBanner
 import com.example.smarthomeapp.ui.components.FloorCard
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 import com.example.smarthomeapp.viewmodel.HouseUiState
+import com.example.smarthomeapp.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     onOpenFloor: (String) -> Unit,
+    onOpenFloorEditor: (String) -> Unit,
     onOpenReport: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
-) {
+){
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val actionError by viewModel.actionError.collectAsStateWithLifecycle()
     var showAddFloor by remember { mutableStateOf(false) }
@@ -97,11 +99,18 @@ fun HomeScreen(
     if (showAddFloor) {
         AddFloorDialog(
             existingLevels = state.floors.map { it.floor.level },
-            onDismiss = { showAddFloor = false },
-            onConfirm = { floor ->
-                viewModel.addFloor(floor)
+
+            onDismiss = {
                 showAddFloor = false
             },
+
+            onConfirm = { floor ->
+
+                viewModel.addFloor(floor)
+
+                showAddFloor = false
+
+            }
         )
     }
 }
@@ -281,53 +290,112 @@ private fun AddFloorDialog(
     onDismiss: () -> Unit,
     onConfirm: (Floor) -> Unit,
 ) {
-    var name by remember { mutableStateOf("") }
-    var planIndex by remember { mutableIntStateOf(0) }
-    val nextLevel = (existingLevels.maxOrNull() ?: -1) + 1
+
+    var name by remember {
+        mutableStateOf("")
+    }
+
+    val nextLevel =
+        (existingLevels.maxOrNull() ?: -1) + 1
+
 
     androidx.compose.material3.AlertDialog(
+
         onDismissRequest = onDismiss,
-        title = { Text("Add floor") },
+
+
+        title = {
+            Text("Add floor")
+        },
+
+
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+
                 androidx.compose.material3.OutlinedTextField(
+
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Floor name") },
+
+                    onValueChange = {
+                        name = it
+                    },
+
+                    label = {
+                        Text("Floor name")
+                    },
+
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+
+                    modifier = Modifier.fillMaxWidth()
+
                 )
+
+
                 Text(
-                    text = "Plan",
-                    style = MaterialTheme.typography.labelLarge,
+                    text = "Rooms can be drawn manually after creating the floor.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AVAILABLE_FLOOR_PLANS.forEachIndexed { index, plan ->
-                        androidx.compose.material3.FilterChip(
-                            selected = planIndex == index,
-                            onClick = { planIndex = index },
-                            label = { Text(plan.removePrefix("plan_").replace('_', ' ')) },
-                        )
-                    }
-                }
+
             }
+
         },
+
+
         confirmButton = {
+
+
             androidx.compose.material3.TextButton(
+
                 enabled = name.isNotBlank(),
+
+
                 onClick = {
+
+
                     onConfirm(
+
                         Floor(
+
                             name = name.trim(),
+
                             level = nextLevel,
-                            planImageAsset = AVAILABLE_FLOOR_PLANS[planIndex],
+
+                            rooms = emptyList()
+
                         )
+
                     )
-                },
-            ) { Text("Add") }
+
+                }
+
+            ) {
+
+                Text("Add")
+
+            }
+
         },
+
+
         dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
+
+
+            androidx.compose.material3.TextButton(
+
+                onClick = onDismiss
+
+            ) {
+
+                Text("Cancel")
+
+            }
+
+        }
+
     )
 }

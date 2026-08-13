@@ -1,6 +1,5 @@
 package com.example.smarthomeapp.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeapp.data.model.Floor
+import androidx.compose.foundation.layout.height
 import com.example.smarthomeapp.ui.screens.floorPlanResource
 
 @Composable
@@ -54,12 +52,22 @@ fun FloorCard(
                     .clip(RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Image(
-                    painter = painterResource(floorPlanResource(floor.planImageAsset)),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                ) {
+
+                    Text(
+                        text = if (floor.rooms.isEmpty()) {
+                            "No rooms created yet"
+                        } else {
+                            "${floor.rooms.size} rooms created"
+                        },
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
             Column(modifier = Modifier.weight(1f)) {

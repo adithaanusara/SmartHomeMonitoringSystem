@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.smarthomeapp.ui.floorplan.FloorPlanEditorScreen
 import com.example.smarthomeapp.ui.screens.DeviceScreen
 import com.example.smarthomeapp.ui.screens.FloorScreen
 import com.example.smarthomeapp.ui.screens.HomeScreen
@@ -25,112 +26,382 @@ import com.example.smarthomeapp.viewmodel.AuthStatus
 import com.example.smarthomeapp.viewmodel.AuthViewModel
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 
-/**
- * Root of the UI.
- *
- * Login and the authenticated graph are separate trees rather than two destinations in one
- * `NavHost`. Swapping the whole tree on sign-out discards the authenticated back stack outright,
- * so there is no way to press Back into a dashboard belonging to a user who has just signed out.
- */
+
 @Composable
 fun AppNavigation(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel = viewModel(),
 ) {
-    val authStatus by authViewModel.authStatus.collectAsStateWithLifecycle()
+
+    val authStatus by authViewModel.authStatus
+        .collectAsStateWithLifecycle()
+
 
     when (authStatus) {
-        AuthStatus.Loading -> LoadingScreen(modifier)
 
-        AuthStatus.SignedOut -> LoginScreen(
-            viewModel = authViewModel,
-            modifier = modifier,
-        )
+        AuthStatus.Loading -> {
+            LoadingScreen(modifier)
+        }
 
-        is AuthStatus.SignedIn -> AuthenticatedNavHost(
-            onSignOut = authViewModel::signOut,
-            modifier = modifier,
-        )
+
+        AuthStatus.SignedOut -> {
+
+            LoginScreen(
+                viewModel = authViewModel,
+                modifier = modifier
+            )
+
+        }
+
+
+        is AuthStatus.SignedIn -> {
+
+            AuthenticatedNavHost(
+                onSignOut = authViewModel::signOut,
+                modifier = modifier
+            )
+
+        }
     }
 }
+
+
 
 @Composable
 private fun AuthenticatedNavHost(
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+
     val navController = rememberNavController()
 
-    // Hoisted above the NavHost so the dashboard, the floor plan and the device screen share one
-    // set of database listeners instead of opening three against the same paths.
     val homeViewModel: HomeViewModel = viewModel()
+
 
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
-        modifier = modifier,
+        modifier = modifier
     ) {
+
+
+        // HOME
         composable(Screen.Home.route) {
+
+
             HomeScreen(
+
                 viewModel = homeViewModel,
-                onOpenFloor = { floorId -> navController.navigate(Screen.Floor.route(floorId)) },
-                onOpenReport = { navController.navigate(Screen.Report.route) },
-                onSignOut = onSignOut,
+
+
+                onOpenFloor = { floorId ->
+
+                    navController.navigate(
+                        Screen.Floor.route(floorId)
+                    )
+
+                },
+
+
+                onOpenFloorEditor = { floorId ->
+
+                    navController.navigate(
+                        Screen.FloorPlanEditor.route(floorId)
+                    )
+
+                },
+
+
+                onOpenReport = {
+
+                    navController.navigate(
+                        Screen.Report.route
+                    )
+
+                },
+
+
+                onSignOut = onSignOut
+
             )
+
         }
 
+
+
+
+        // FLOOR PLAN EDITOR
         composable(
+
+            route = Screen.FloorPlanEditor.route,
+
+            arguments = listOf(
+
+                navArgument(Screen.ARG_FLOOR_ID) {
+
+                    type = NavType.StringType
+
+                }
+
+            )
+
+        ) { entry ->
+
+
+            val floorId =
+                entry.requireArg(
+                    Screen.ARG_FLOOR_ID
+                )
+
+
+            FloorPlanEditorScreen(
+
+                floorId = floorId,
+
+                onBack = {
+                    navController.popBackStack()
+                },
+
+                onSave = { rooms ->
+
+                    // next step Firebase save
+                    navController.popBackStack()
+
+                }
+
+            )
+
+        }
+
+
+
+
+
+        // FLOOR SCREEN
+        composable(
+
             route = Screen.Floor.route,
-            arguments = listOf(navArgument(Screen.ARG_FLOOR_ID) { type = NavType.StringType }),
+
+            arguments = listOf(
+
+                navArgument(Screen.ARG_FLOOR_ID) {
+
+                    type = NavType.StringType
+
+                }
+
+            )
+
         ) { entry ->
+
+
+            val floorId =
+                entry.requireArg(
+                    Screen.ARG_FLOOR_ID
+                )
+
+
             FloorScreen(
-                floorId = entry.requireArg(Screen.ARG_FLOOR_ID),
+
+                floorId = floorId,
+
                 viewModel = homeViewModel,
-                onBack = navController::popBackStack,
-                onOpenDevice = { id -> navController.navigate(Screen.Device.route(id)) },
+
+
+                onBack = {
+
+                    navController.popBackStack()
+
+                },
+
+
+                onOpenDevice = { deviceId ->
+
+
+                    navController.navigate(
+
+                        Screen.Device.route(deviceId)
+
+                    )
+
+                },
+
+
+                onEditFloor = {
+
+
+                    navController.navigate(
+
+                        Screen.FloorPlanEditor.route(floorId)
+
+                    )
+
+                }
+
             )
+
         }
 
+
+
+
+
+        // DEVICE
         composable(
+
             route = Screen.Device.route,
-            arguments = listOf(navArgument(Screen.ARG_DEVICE_ID) { type = NavType.StringType }),
+
+            arguments = listOf(
+
+                navArgument(Screen.ARG_DEVICE_ID) {
+
+                    type = NavType.StringType
+
+                }
+
+            )
+
         ) { entry ->
+
+
             DeviceScreen(
-                deviceId = entry.requireArg(Screen.ARG_DEVICE_ID),
+
+                deviceId =
+                    entry.requireArg(
+                        Screen.ARG_DEVICE_ID
+                    ),
+
+
                 viewModel = homeViewModel,
-                onBack = navController::popBackStack,
-                onOpenSchedule = { id -> navController.navigate(Screen.Schedule.route(id)) },
+
+
+                onBack = {
+
+                    navController.popBackStack()
+
+                },
+
+
+                onOpenSchedule = { deviceId ->
+
+
+                    navController.navigate(
+
+                        Screen.Schedule.route(deviceId)
+
+                    )
+
+                }
+
             )
+
         }
 
+
+
+
+
+        // SCHEDULE
         composable(
+
             route = Screen.Schedule.route,
-            arguments = listOf(navArgument(Screen.ARG_DEVICE_ID) { type = NavType.StringType }),
-        ) { entry ->
-            ScheduleScreen(
-                deviceId = entry.requireArg(Screen.ARG_DEVICE_ID),
-                viewModel = homeViewModel,
-                onBack = navController::popBackStack,
+
+            arguments = listOf(
+
+                navArgument(Screen.ARG_DEVICE_ID) {
+
+                    type = NavType.StringType
+
+                }
+
             )
+
+        ) { entry ->
+
+
+            ScheduleScreen(
+
+                deviceId =
+                    entry.requireArg(
+                        Screen.ARG_DEVICE_ID
+                    ),
+
+
+                viewModel = homeViewModel,
+
+
+                onBack = {
+
+                    navController.popBackStack()
+
+                }
+
+            )
+
         }
 
+
+
+
+
+        // REPORT
         composable(Screen.Report.route) {
-            // Its own ViewModel: the report reads /events, which no other screen needs.
-            ReportScreen(onBack = navController::popBackStack)
+
+
+            ReportScreen(
+
+                onBack = {
+
+                    navController.popBackStack()
+
+                }
+
+            )
+
         }
+
     }
+
 }
 
-/** Route arguments are declared non-null in the graph, so a missing one is a wiring bug. */
-private fun NavBackStackEntry.requireArg(key: String): String =
-    checkNotNull(arguments?.getString(key)) { "Missing route argument '$key'" }
+
+
+
+private fun NavBackStackEntry.requireArg(
+    key: String
+): String {
+
+    return checkNotNull(
+        arguments?.getString(key)
+    ) {
+
+        "Missing route argument '$key'"
+
+    }
+
+}
+
+
+
+
 
 @Composable
-private fun LoadingScreen(modifier: Modifier = Modifier) {
+private fun LoadingScreen(
+    modifier: Modifier = Modifier
+) {
+
+
     Box(
+
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+
+        contentAlignment = Alignment.Center
+
     ) {
+
+
         CircularProgressIndicator()
+
     }
+
 }

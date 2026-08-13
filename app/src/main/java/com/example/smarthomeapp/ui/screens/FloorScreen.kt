@@ -1,7 +1,7 @@
 package com.example.smarthomeapp.ui.screens
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,13 +36,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +57,10 @@ import com.example.smarthomeapp.ui.components.icon
 import com.example.smarthomeapp.ui.components.label
 import com.example.smarthomeapp.ui.components.statusColors
 import com.example.smarthomeapp.viewmodel.HomeViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Alignment
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,118 +69,284 @@ fun FloorScreen(
     viewModel: HomeViewModel,
     onBack: () -> Unit,
     onOpenDevice: (String) -> Unit,
+
+    // NEW:
+    // Opens the manual floor/room editor.
+    onEditFloor: () -> Unit,
+
     modifier: Modifier = Modifier,
 ) {
+
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     val floor = state.floor(floorId)
+
     val devices = state.devicesOn(floorId)
-    var confirmDelete by remember { mutableStateOf(false) }
+
+    var confirmDelete by remember {
+        mutableStateOf(false)
+    }
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+
         topBar = {
+
             TopAppBar(
-                title = { Text(floor?.name ?: "Floor") },
+
+                title = {
+                    Text(floor?.name ?: "Floor")
+                },
+
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+
+                    IconButton(
+                        onClick = onBack
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+
                     }
                 },
+
                 actions = {
-                    IconButton(onClick = { confirmDelete = true }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete floor")
+
+                    /*
+                     * NEW EDIT BUTTON
+                     *
+                     * User clicks this to open FloorPlanEditorScreen,
+                     * where rooms can be drawn manually.
+                     */
+                    IconButton(
+                        onClick = onEditFloor
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit floor plan"
+                        )
+
                     }
-                },
+
+
+                    // Existing delete button
+                    IconButton(
+                        onClick = {
+                            confirmDelete = true
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete floor"
+                        )
+
+                    }
+                }
             )
-        },
+        }
+
     ) { innerPadding ->
+
+
+        /*
+         * Floor might disappear while this screen is open
+         * if it was deleted from Firebase.
+         */
         if (floor == null) {
+
             Box(
-                Modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentAlignment = Alignment.Center,
+
+                contentAlignment = Alignment.Center
             ) {
+
                 Text("This floor no longer exists.")
+
             }
+
             return@Scaffold
         }
 
+
         LazyColumn(
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
+
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+
+            verticalArrangement =
+                Arrangement.spacedBy(12.dp)
+
         ) {
+
+
+            /*
+             * Current floor plan + grid + device markers.
+             */
             item {
+
                 FloorPlanGrid(
                     floor = floor,
                     devices = devices,
-                    onDeviceTap = onOpenDevice,
+                    onDeviceTap = onOpenDevice
                 )
+
             }
+
 
             item {
+
                 Text(
                     text = "Devices",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 4.dp),
+
+                    style =
+                        MaterialTheme.typography.titleSmall,
+
+                    fontWeight =
+                        FontWeight.SemiBold,
+
+                    modifier =
+                        Modifier.padding(top = 4.dp)
                 )
+
             }
+
 
             if (devices.isEmpty()) {
+
                 item {
+
                     Text(
                         text = "No devices on this floor yet.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                        style =
+                            MaterialTheme.typography.bodyMedium,
+
+                        color =
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
                 }
+
             }
 
-            items(devices, key = { it.id }) { device ->
+
+            items(
+                items = devices,
+                key = { it.id }
+            ) { device ->
+
+
                 DeviceCard(
+
                     device = device,
-                    onOpen = { onOpenDevice(device.id) },
-                    onToggle = { on -> viewModel.toggleDevice(device, on) },
+
+                    onOpen = {
+                        onOpenDevice(device.id)
+                    },
+
+                    onToggle = { on ->
+                        viewModel.toggleDevice(
+                            device,
+                            on
+                        )
+                    }
                 )
+
             }
         }
     }
 
+
+    /*
+     * Delete confirmation dialog
+     */
     if (confirmDelete) {
+
         AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete ${floor?.name.orEmpty()}?") },
+
+            onDismissRequest = {
+                confirmDelete = false
+            },
+
+            title = {
+
+                Text(
+                    "Delete ${floor?.name.orEmpty()}?"
+                )
+
+            },
+
             text = {
+
                 Text(
                     "This also removes ${devices.size} device(s) on this floor. " +
-                        "This cannot be undone."
+                            "This cannot be undone."
                 )
+
             },
+
             confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    viewModel.deleteFloor(floorId)
-                    onBack()
-                }) { Text("Delete") }
+
+                TextButton(
+
+                    onClick = {
+
+                        confirmDelete = false
+
+                        viewModel.deleteFloor(
+                            floorId
+                        )
+
+                        onBack()
+
+                    }
+
+                ) {
+
+                    Text("Delete")
+
+                }
+
             },
+
             dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
-            },
+
+                TextButton(
+
+                    onClick = {
+                        confirmDelete = false
+                    }
+
+                ) {
+
+                    Text("Cancel")
+
+                }
+
+            }
         )
     }
 }
 
+
 /**
- * The spec's abstract grid mapping overlaid onto a floor layout.
+ * Shows:
  *
- * The plan is drawn at a fixed aspect ratio derived from the floor's own `gridCols`/`gridRows`, so
- * a cell is always square and a device's `gridX`/`gridY` lands in the same place at every screen
- * size. Sizing the grid from the image instead would make placement depend on the drawable's
- * intrinsic dimensions, and markers would drift when a plan was swapped.
+ * 1. Floor plan image
+ * 2. Grid
+ * 3. Device markers
+ *
+ * Room drawing itself is handled by FloorPlanEditorScreen.
  */
 @Composable
 private fun FloorPlanGrid(
@@ -183,69 +355,214 @@ private fun FloorPlanGrid(
     onDeviceTap: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cols = floor.gridCols.coerceAtLeast(1)
-    val rows = floor.gridRows.coerceAtLeast(1)
-    val gridLineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+
+    val cols =
+        floor.gridCols.coerceAtLeast(1)
+
+    val rows =
+        floor.gridRows.coerceAtLeast(1)
+
+
+    val gridLineColor =
+        MaterialTheme.colorScheme.outline
+            .copy(alpha = 0.35f)
+
 
     Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(cols.toFloat() / rows.toFloat()),
-        ) {
-            val cellWidth = maxWidth / cols
-            val cellHeight = maxHeight / rows
 
-            Image(
-                painter = painterResource(floorPlanResource(floor.planImageAsset)),
-                contentDescription = "${floor.name} plan",
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize(),
+        modifier =
+            modifier.fillMaxWidth(),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    MaterialTheme.colorScheme.surfaceContainerLow
             )
 
-            val strokePx = with(LocalDensity.current) { 1.dp.toPx() }
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val stepX = size.width / cols
-                val stepY = size.height / rows
-                for (c in 1 until cols) {
-                    drawLine(
-                        color = gridLineColor,
-                        start = androidx.compose.ui.geometry.Offset(c * stepX, 0f),
-                        end = androidx.compose.ui.geometry.Offset(c * stepX, size.height),
-                        strokeWidth = strokePx,
-                    )
+    ) {
+
+
+        BoxWithConstraints(
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(
+                    cols.toFloat() /
+                            rows.toFloat()
+                )
+
+        ) {
+
+
+            val cellWidth =
+                maxWidth / cols
+
+            val cellHeight =
+                maxHeight / rows
+
+
+            /*
+             * Existing floor plan background.
+             */
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+
+                Text(
+                    text = if (floor.rooms.isEmpty()) {
+                        "No rooms created yet"
+                    } else {
+                        "${floor.rooms.size} rooms created"
+                    },
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+            }
+
+
+            /*
+             * Grid lines
+             */
+            val strokePx =
+                with(LocalDensity.current) {
+                    1.dp.toPx()
                 }
-                for (r in 1 until rows) {
+
+
+            Canvas(
+                modifier =
+                    Modifier.fillMaxSize()
+            ) {
+
+
+                val stepX =
+                    size.width / cols
+
+                val stepY =
+                    size.height / rows
+
+
+                for (c in 1 until cols) {
+
                     drawLine(
-                        color = gridLineColor,
-                        start = androidx.compose.ui.geometry.Offset(0f, r * stepY),
-                        end = androidx.compose.ui.geometry.Offset(size.width, r * stepY),
-                        strokeWidth = strokePx,
+
+                        color =
+                            gridLineColor,
+
+                        start =
+                            androidx.compose.ui.geometry.Offset(
+                                c * stepX,
+                                0f
+                            ),
+
+                        end =
+                            androidx.compose.ui.geometry.Offset(
+                                c * stepX,
+                                size.height
+                            ),
+
+                        strokeWidth =
+                            strokePx
                     )
+
+                }
+
+
+                for (r in 1 until rows) {
+
+                    drawLine(
+
+                        color =
+                            gridLineColor,
+
+                        start =
+                            androidx.compose.ui.geometry.Offset(
+                                0f,
+                                r * stepY
+                            ),
+
+                        end =
+                            androidx.compose.ui.geometry.Offset(
+                                size.width,
+                                r * stepY
+                            ),
+
+                        strokeWidth =
+                            strokePx
+                    )
+
                 }
             }
 
+
+            /*
+             * Device markers
+             */
             devices.forEach { device ->
-                val x = device.gridX.coerceIn(0, cols - 1)
-                val y = device.gridY.coerceIn(0, rows - 1)
+
+
+                val x =
+                    device.gridX
+                        .coerceIn(
+                            0,
+                            cols - 1
+                        )
+
+
+                val y =
+                    device.gridY
+                        .coerceIn(
+                            0,
+                            rows - 1
+                        )
+
+
+                val markerSize =
+                    minOf(
+                        cellWidth,
+                        cellHeight
+                    )
+
+
                 DeviceMarker(
+
                     device = device,
-                    cellSize = minOf(cellWidth, cellHeight),
-                    onTap = { onDeviceTap(device.id) },
-                    modifier = Modifier.offset(
-                        x = cellWidth * x + (cellWidth - minOf(cellWidth, cellHeight)) / 2,
-                        y = cellHeight * y + (cellHeight - minOf(cellWidth, cellHeight)) / 2,
-                    ),
+
+                    cellSize =
+                        markerSize,
+
+                    onTap = {
+                        onDeviceTap(
+                            device.id
+                        )
+                    },
+
+                    modifier =
+                        Modifier.offset(
+
+                            x =
+                                cellWidth * x +
+                                        (
+                                                cellWidth -
+                                                        markerSize
+                                                ) / 2,
+
+                            y =
+                                cellHeight * y +
+                                        (
+                                                cellHeight -
+                                                        markerSize
+                                                ) / 2
+                        )
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun DeviceMarker(
@@ -254,34 +571,99 @@ private fun DeviceMarker(
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val status = device.effectiveStatus
-    val colors = statusColors(status)
-    val description = "${device.name}, ${device.deviceType.label()}, ${status.label()}"
+
+    val status =
+        device.effectiveStatus
+
+    val colors =
+        statusColors(status)
+
+    val description =
+        "${device.name}, " +
+                "${device.deviceType.label()}, " +
+                status.label()
+
 
     Box(
-        modifier = modifier
-            .size(cellSize)
-            .padding(cellSize * 0.14f)
-            .clip(CircleShape)
-            .background(colors.container)
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
+
+        modifier =
+            modifier
+                .size(cellSize)
+                .padding(
+                    cellSize * 0.14f
+                )
+                .clip(CircleShape)
+                .background(
+                    colors.container
+                )
+                .semantics {
+                    contentDescription =
+                        description
+                },
+
+        contentAlignment =
+            Alignment.Center
+
     ) {
-        IconButton(onClick = onTap, modifier = Modifier.fillMaxSize()) {
+
+
+        IconButton(
+
+            onClick = onTap,
+
+            modifier =
+                Modifier.fillMaxSize()
+
+        ) {
+
+
             Icon(
-                imageVector = device.deviceType.icon(),
-                contentDescription = null,
-                tint = colors.content,
-                modifier = Modifier.size(cellSize * 0.42f),
+
+                imageVector =
+                    device.deviceType.icon(),
+
+                contentDescription =
+                    null,
+
+                tint =
+                    colors.content,
+
+                modifier =
+                    Modifier.size(
+                        cellSize * 0.42f
+                    )
             )
+
         }
-        // A ring makes ON readable at marker size, where a fill alone is easy to miss.
-        if (status == DeviceStatus.ON) {
-            Canvas(Modifier.fillMaxSize()) {
+
+
+        /*
+         * ON state ring
+         */
+        if (
+            status ==
+            DeviceStatus.ON
+        ) {
+
+            Canvas(
+                Modifier.fillMaxSize()
+            ) {
+
                 drawCircle(
-                    color = colors.content,
-                    radius = size.minDimension / 2 - 1.dp.toPx(),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()),
+
+                    color =
+                        colors.content,
+
+                    radius =
+                        size.minDimension /
+                                2 -
+                                1.dp.toPx(),
+
+                    style =
+                        androidx.compose.ui.graphics.drawscope.Stroke(
+                            width =
+                                2.dp.toPx()
+                        )
                 )
             }
         }
