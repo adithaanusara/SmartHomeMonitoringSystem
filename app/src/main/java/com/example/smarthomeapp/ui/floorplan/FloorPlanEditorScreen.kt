@@ -24,13 +24,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,11 +65,27 @@ fun FloorPlanEditorScreen(
 
 
     /*
-     * Keyed by room id, and insertion-ordered — `Map + pair` yields a LinkedHashMap — so Undo
+     * Keyed by room id, and insertion-ordered — the saver below rebuilds a LinkedHashMap — so Undo
      * removes the room drawn most recently rather than an arbitrary one.
+     *
+     * Saveable rather than remembered: MainActivity declares neither a fixed orientation nor
+     * configChanges, so a rotation — or a font-size change, or entering split screen — destroys
+     * and recreates it. With a plain `remember` every room drawn so far was lost at that point and
+     * the canvas came back empty, which on a newly added floor meant Save then persisted an empty
+     * map over a plan the user had just drawn.
      */
-    var rooms by remember {
+    var rooms by rememberSaveable(stateSaver = roomsSaver) {
         mutableStateOf<Map<String, Room>>(emptyMap())
+    }
+
+
+    /*
+     * Which floor [rooms] was already seeded from. Saved for the same reason the rooms are: after a
+     * rotation the effect below runs again on the same floor, and without this it would overwrite
+     * the restored drawing with whatever is in the database — undoing the restore it just did.
+     */
+    var seededFloorId by rememberSaveable {
+        mutableStateOf<String?>(null)
     }
 
 
@@ -77,19 +95,25 @@ fun FloorPlanEditorScreen(
      */
     LaunchedEffect(floor?.id) {
 
-        floor?.let {
-            rooms = it.rooms
+        val floorId = floor?.id
+
+        if (floorId != null && floorId != seededFloorId) {
+
+            rooms = floor.rooms
+
+            seededFloorId = floorId
+
         }
 
     }
 
 
-    var pendingRoom by remember {
+    var pendingRoom by rememberSaveable(stateSaver = pendingRoomSaver) {
         mutableStateOf<PendingRoom?>(null)
     }
 
 
-    var showRoomNameDialog by remember {
+    var showRoomNameDialog by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -125,6 +149,73 @@ fun FloorPlanEditorScreen(
                 }
 
             )
+
+        },
+
+
+        /*
+         * Save lives in the bottom bar rather than under the canvas.
+         *
+         * The plan is laid out at the floor's own aspect ratio, so in landscape it is taller than
+         * the window on its own. Below a canvas that size, in a Column that does not scroll, the
+         * button was simply never on screen — the plan could be drawn and then not saved, with no
+         * indication that the control existed at all. Anchored here it is reachable at any window
+         * size. Hidden while the floor is unresolved, so there is nothing to press on a floor that
+         * is still loading or has been deleted.
+         */
+        bottomBar = {
+
+            if (floor != null) {
+
+                Surface(
+                    tonalElevation = 3.dp
+                ) {
+
+                    Column(
+
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+
+                    ) {
+
+
+                        Text(
+                            text = "Rooms: ${rooms.size}"
+                        )
+
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+
+                        /*
+                         * Deliberately enabled even with no rooms: clearing a plan and saving that
+                         * is a legitimate edit, and gating Save on a non-empty canvas would make
+                         * an existing plan impossible to remove.
+                         */
+                        Button(
+
+                            modifier = Modifier.fillMaxWidth(),
+
+                            onClick = {
+
+                                onSave(rooms)
+
+                            }
+
+                        ) {
+
+                            Text("Save Floor Plan")
+
+                        }
+
+                    }
+
+                }
+
+            }
 
         }
 
@@ -295,145 +386,105 @@ fun FloorPlanEditorScreen(
              * gridCols/gridRows. Room geometry is stored as fractions of whatever box it was
              * drawn in, so drawing on a differently shaped canvas would stretch every room on
              * the way to the floor screen — a square drawn here would arrive as a rectangle.
+             *
+             * Centred inside the leftover space rather than sized from the width alone: the ratio
+             * has to be honoured, so when the window is too short for a full-width plan the canvas
+             * has to shrink to fit the height instead of overflowing off the bottom.
              */
-            Card(
+            Box(
 
                 modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
 
-                    .fillMaxWidth()
-
-                    .aspectRatio(
-                        floor.gridCols.coerceAtLeast(1).toFloat() /
-                                floor.gridRows.coerceAtLeast(1).toFloat()
-                    ),
-
-
-
-                colors = CardDefaults.cardColors(
-
-                    containerColor =
-                        MaterialTheme.colorScheme.surfaceContainerLow
-
-                )
+                contentAlignment = Alignment.Center
 
             ) {
 
 
-                val planRes = floorPlanResource(floor.planImageAsset)
+                Card(
+
+                    modifier = Modifier
+
+                        .aspectRatio(
+                            floor.gridCols.coerceAtLeast(1).toFloat() /
+                                    floor.gridRows.coerceAtLeast(1).toFloat()
+                        ),
 
 
-                Box(modifier = Modifier.fillMaxSize()) {
+
+                    colors = CardDefaults.cardColors(
+
+                        containerColor =
+                            MaterialTheme.colorScheme.surfaceContainerLow
+
+                    )
+
+                ) {
 
 
-                    /*
-                     * The bundled plan, when there is one, so rooms are traced onto the layout
-                     * they belong to rather than drawn blind.
-                     */
-                    planRes?.let {
+                    val planRes = floorPlanResource(floor.planImageAsset)
 
-                        Image(
-                            painter = painterResource(it),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            alpha = floorPlanAlpha(),
+
+                    Box(modifier = Modifier.fillMaxSize()) {
+
+
+                        /*
+                         * The bundled plan, when there is one, so rooms are traced onto the layout
+                         * they belong to rather than drawn blind.
+                         */
+                        planRes?.let {
+
+                            Image(
+                                painter = painterResource(it),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                alpha = floorPlanAlpha(),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+
+                        }
+
+
+                        RoomCanvas(
+
+                            rooms = rooms.values,
+
+
+                            backgroundColor =
+                                if (planRes != null) Color.Transparent
+                                else Color(0xFFF4F6F8),
+
+
                             modifier = Modifier.fillMaxSize(),
+
+
+                            onRoomDrawn = { x, y, width, height ->
+
+
+                                pendingRoom = PendingRoom(
+
+                                    x = x,
+
+                                    y = y,
+
+                                    width = width,
+
+                                    height = height
+
+                                )
+
+
+                                showRoomNameDialog = true
+
+
+                            }
+
                         )
 
                     }
 
-
-                    RoomCanvas(
-
-                        rooms = rooms.values,
-
-
-                        backgroundColor =
-                            if (planRes != null) Color.Transparent
-                            else Color(0xFFF4F6F8),
-
-
-                        modifier = Modifier.fillMaxSize(),
-
-
-                        onRoomDrawn = { x, y, width, height ->
-
-
-                            pendingRoom = PendingRoom(
-
-                                x = x,
-
-                                y = y,
-
-                                width = width,
-
-                                height = height
-
-                            )
-
-
-                            showRoomNameDialog = true
-
-
-                        }
-
-                    )
-
                 }
-
-            }
-
-
-
-
-
-
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-
-
-
-
-            Text(
-
-                text = "Rooms: ${rooms.size}"
-
-            )
-
-
-
-
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-
-
-
-
-
-
-            /*
-             * Deliberately enabled even with no rooms: clearing a plan and saving that is a
-             * legitimate edit, and gating Save on a non-empty canvas would make an existing
-             * plan impossible to remove.
-             */
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-
-                onClick = {
-
-                    onSave(rooms)
-
-                }
-            ) {
-
-
-
-                Text("Save Floor Plan")
 
             }
 
@@ -554,5 +605,80 @@ private data class PendingRoom(
     val width: Float,
 
     val height: Float
+)
+
+
+/**
+ * Flattens the drawn rooms to the primitives a saved-instance-state [android.os.Bundle] accepts.
+ *
+ * [Room] is a plain Firebase model with no Parcelable or Serializable of its own, and giving it one
+ * for the benefit of one screen would put a UI concern in the schema the simulator and worker also
+ * read. Six values per room instead, in map order — `associate` rebuilds a LinkedHashMap, which is
+ * what keeps Undo removing the room drawn most recently.
+ */
+private const val ROOM_FIELD_COUNT = 6
+
+private val roomsSaver = listSaver<Map<String, Room>, Any>(
+
+    save = { rooms ->
+
+        rooms.flatMap { (id, room) ->
+
+            listOf(id, room.name, room.x, room.y, room.width, room.height)
+
+        }
+
+    },
+
+    restore = { flattened ->
+
+        flattened.chunked(ROOM_FIELD_COUNT).associate { fields ->
+
+            (fields[0] as String) to Room(
+
+                name = fields[1] as String,
+
+                x = fields[2] as Float,
+
+                y = fields[3] as Float,
+
+                width = fields[4] as Float,
+
+                height = fields[5] as Float,
+
+            )
+
+        }
+
+    },
+
+)
+
+/**
+ * The rectangle waiting for a name, so the naming dialog survives a rotation with the drag that
+ * opened it rather than reopening over a room the user can no longer see.
+ *
+ * Nothing pending flattens to an empty list, which [listSaver] stores as "nothing saved" — the
+ * state then falls back to its initial value, which is the same `null`.
+ */
+private val pendingRoomSaver = listSaver<PendingRoom?, Any>(
+
+    save = { pending ->
+
+        pending?.let { listOf(it.x, it.y, it.width, it.height) }.orEmpty()
+
+    },
+
+    restore = { fields ->
+
+        if (fields.isEmpty()) null
+        else PendingRoom(
+            x = fields[0] as Float,
+            y = fields[1] as Float,
+            width = fields[2] as Float,
+            height = fields[3] as Float,
+        )
+
+    },
 
 )

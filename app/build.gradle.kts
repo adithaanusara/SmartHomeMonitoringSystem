@@ -33,10 +33,11 @@ android {
         applicationId = "com.example.smarthomeapp"
         minSdk = 26
         targetSdk = 36
-        // v1.2 — UI/UX pass: a fixed brand palette in place of the template's dynamic colour,
-        // a full type scale, shared spacing/shape tokens, and status-driven motion.
-        versionCode = 3
-        versionName = "1.2"
+        // v1.3 — floor plan editor fixes: the drawing now survives a configuration change, Save is
+        // reachable at any window size, a room can no longer be discarded by naming it nothing, and
+        // a rejected write reports on the floor screen instead of vanishing with the editor.
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
