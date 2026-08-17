@@ -4,10 +4,11 @@ import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.House
 import com.example.smarthomeapp.data.model.Room
 import com.example.smarthomeapp.data.remote.FirebaseDatabaseService
-import com.example.smarthomeapp.data.remote.observeChildren
 import com.example.smarthomeapp.data.remote.observeObject
 import com.example.smarthomeapp.data.remote.setValueSuspend
+import com.example.smarthomeapp.data.remote.valueEvents
 import com.example.smarthomeapp.utils.Constants
+import com.google.firebase.database.DataSnapshot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -19,12 +20,15 @@ class HouseRepository(
         db.house(houseId).observeObject(House::class.java) { house, key -> house.id = key }
 
     fun observeFloors(houseId: String): Flow<List<Floor>> =
-        db.floors(houseId)
-            .observeChildren(Floor::class.java) { floor, key -> floor.id = key }
-            .map { floors -> floors.sortedBy { it.level } }
+        db.floors(houseId).valueEvents()
+            .map { snapshot ->
+                snapshot.children
+                    .mapNotNull { it.toFloorOrNull() }
+                    .sortedBy { it.level }
+            }
 
     fun observeFloor(houseId: String, floorId: String): Flow<Floor?> =
-        db.floor(houseId, floorId).observeObject(Floor::class.java) { floor, key -> floor.id = key }
+        db.floor(houseId, floorId).valueEvents().map { it.toFloorOrNull() }
 
     /**
      * Creates a house and indexes it under its owner in one atomic write, so a house can never
@@ -70,10 +74,6 @@ class HouseRepository(
         db.floor(houseId, floorId).child(FLOOR_CHILD_ROOMS).setValueSuspend(rooms)
     }
 
-    private companion object {
-        const val FLOOR_CHILD_ROOMS = "rooms"
-    }
-
     /**
      * Removes a floor and every device on it in one write. Devices are keyed by house rather than
      * by floor, so they would otherwise be orphaned onto a plan that no longer exists.
@@ -88,3 +88,34 @@ class HouseRepository(
         db.applyAtomicUpdate(updates)
     }
 }
+
+private const val FLOOR_CHILD_ROOMS = "rooms"
+
+/**
+ * Deserialises one floor, treating its `rooms` node as untrusted input.
+ *
+ * `Floor.rooms` is excluded from the Firebase mapper, so a malformed rooms node can no longer
+ * abort the floor itself. Rooms are parsed here instead, one at a time, and anything unusable is
+ * dropped — three programs write to this database and two of them are not this build of this app.
+ */
+private fun DataSnapshot.toFloorOrNull(): Floor? {
+    val floor = runCatching { getValue(Floor::class.java) }.getOrNull() ?: return null
+    floor.id = key.orEmpty()
+    floor.rooms = parseRooms()
+    return floor
+}
+
+/**
+ * The rooms that survive parsing, keyed by id.
+ *
+ * Two failures are tolerated rather than fatal: a room that will not deserialise at all, and one
+ * that deserialises but carries geometry outside 0..1 — which is what an older build's raw pixel
+ * coordinates look like. Both are skipped, leaving the rest of the floor intact.
+ */
+private fun DataSnapshot.parseRooms(): Map<String, Room> =
+    child(FLOOR_CHILD_ROOMS).children.mapNotNull { node ->
+        val id = node.key ?: return@mapNotNull null
+        val room = runCatching { node.getValue(Room::class.java) }.getOrNull()
+            ?: return@mapNotNull null
+        if (room.hasRenderableGeometry) id to room else null
+    }.toMap()
