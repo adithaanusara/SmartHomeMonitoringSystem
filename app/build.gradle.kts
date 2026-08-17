@@ -33,10 +33,10 @@ android {
         applicationId = "com.example.smarthomeapp"
         minSdk = 26
         targetSdk = 36
-        // v1.1 — adds the manual floor plan editor, and carries the release-build and
-        // floor-deserialisation fixes made after v1.0 was cut.
-        versionCode = 2
-        versionName = "1.1"
+        // v1.2 — UI/UX pass: a fixed brand palette in place of the template's dynamic colour,
+        // a full type scale, shared spacing/shape tokens, and status-driven motion.
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
