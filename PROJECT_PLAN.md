@@ -360,27 +360,29 @@ summed in milliseconds before formatting.
       signature-verified (v2 scheme, `CN=Smart Home Monitoring System`). The README link points at
       v1.2 and 404s until this release is cut. Upload
       `app/build/outputs/apk/release/SmartHomeApp-v1.2.apk`
-- [ ] **Technical report** covering exactly the three topics the spec names: the synchronisation mechanism, floor representation, and simulator operations. Include the schema, a component diagram, and a sync sequence diagram
-- [ ] **README** — setup steps, Firebase config, how to run simulator and worker, APK link, team contributions
-- [ ] **Demo video, ≤25 min** — all three members on camera, each introducing themselves and their own contribution
+- [x] **Technical report** — `docs/TECHNICAL_REPORT.md`, covering exactly the three topics the spec
+      names: the synchronisation mechanism, floor representation, and simulator operations, with the
+      schema, a component diagram and a sync sequence diagram
+- [x] **README** — setup steps, Firebase config, how to run simulator and worker, APK link, team contributions
+- [ ] **Demo video, ≤25 min** — both members on camera, each introducing themselves and their own
+      contribution. **Check with the lecturer:** the brief is written for three-member groups and
+      says "all three members must present"; this is a two-member group
 - [ ] Rehearse the three-way live demo: phone, simulator, and worker logs on screen together
-- [ ] Verify every member has meaningful commits under their own Git identity — individual defence is explicitly assessed
+- [x] Both members have meaningful commits under their own Git identity — individual defence is explicitly assessed
 
 ---
 
-## 5. Suggested three-way split
+## 5. Work split — as actually delivered
 
-Aligned so each member owns one deliverable end-to-end and can defend it individually.
+This is a **two-member** group. The split below reflects the commit history rather than the
+original plan, which was drafted assuming three members.
 
-| Member | Owns | Also |
+| Member | Owns | Report section |
 |---|---|---|
-| **A** | Data layer, auth, navigation, Firebase services, schema | Report: sync mechanism |
-| **B** | Dashboard, floor plan grid, all five device-profile UIs, camera | Report: floor representation |
-| **C** | Worker (safety + schedules), web simulator, reporting screen, alerts | Report: simulator operations |
+| **T.H. Ellewela** | Data layer, Firebase services, schema, auth, navigation, dashboard, device profiles, scheduling, reporting, safety worker, web simulator, UI design system, releases | Sync mechanism, simulator operations |
+| **Aditha Anusara** | Project scaffold, initial Firebase integration, build configuration, floor plan editor (manual room drawing) | Floor representation |
 
-Everyone: own screens' ViewModels, own commits, own segment of the video.
-
-**Dependency warning:** B and C are both blocked on A's data layer. A should ship models + repositories as a thin vertical slice in the first few days, even if the internals are stubbed, so the other two aren't idle.
+Both: own commits under their own Git identity, own segment of the video.
 
 ---
 

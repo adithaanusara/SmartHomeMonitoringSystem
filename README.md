@@ -32,6 +32,7 @@ from an unknown source. Allow it for your browser or file manager and the instal
 
 | Document | Contents |
 |---|---|
+| [`docs/TECHNICAL_REPORT.md`](docs/TECHNICAL_REPORT.md) | **The submitted report** — synchronisation mechanism, floor representation, simulator operations |
 | [`docs/SCHEMA.md`](docs/SCHEMA.md) | The Realtime Database schema and its invariants — the contract all three programs share |
 | [`PROJECT_PLAN.md`](PROJECT_PLAN.md) | Build plan, design decisions and verification record |
 | [`firebase/README.md`](firebase/README.md) | Firebase console setup: database, auth, rules, seed data |
@@ -122,6 +123,8 @@ on-durations from a transition log, and deciding when a schedule boundary fires.
 
 | Member | Contribution |
 |---|---|
-| _name_ | _area_ |
-| _name_ | _area_ |
-| _name_ | _area_ |
+| **T.H. Ellewela** | Data layer and Firebase services, schema, auth and navigation, dashboard and device profiles, scheduling, usage reporting, safety worker, web simulator, UI design system and releases |
+| **Aditha Anusara** | Android project scaffold, initial Firebase integration, build configuration, floor plan editor (manual room drawing) |
+
+Per-member detail and the report sections each owns are in
+[`docs/TECHNICAL_REPORT.md`](docs/TECHNICAL_REPORT.md#8-team-contributions).
