@@ -13,7 +13,7 @@ A Smart Home monitoring and control system in three parts:
 All three share one Firebase Realtime Database and never talk to each other directly. State moves
 between them purely through database listeners, which is what makes the sync bidirectional.
 
-📄 **[Download the APK](https://github.com/adithaanusara/SmartHomeMonitoringSystem/releases/download/v1.2/SmartHomeApp-v1.2.apk)** — v1.2, 2.57 MB
+📄 **[Download the APK](https://github.com/adithaanusara/SmartHomeMonitoringSystem/releases/download/v1.3/SmartHomeApp-v1.3.apk)** — v1.3, 2.57 MB
 
 ---
 

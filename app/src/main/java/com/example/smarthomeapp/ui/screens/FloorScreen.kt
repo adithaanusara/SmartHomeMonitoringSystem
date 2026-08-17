@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smarthomeapp.data.model.Device
 import com.example.smarthomeapp.data.model.DeviceStatus
 import com.example.smarthomeapp.data.model.Floor
+import com.example.smarthomeapp.ui.components.AlertBanner
 import com.example.smarthomeapp.ui.components.DeviceCard
 import com.example.smarthomeapp.ui.components.icon
 import com.example.smarthomeapp.ui.components.label
@@ -80,6 +81,16 @@ fun FloorScreen(
 ) {
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    /*
+     * Writes are fire-and-forget, so a rejected one reports back here rather than at the call site.
+     *
+     * The floor plan editor pops straight back to this screen after saving, and the same slot is
+     * read on the dashboard — without it here, a plan that failed to write (no permission on the
+     * house, or offline) looked exactly like one that saved, because the editor is already gone by
+     * the time the failure arrives.
+     */
+    val actionError by viewModel.actionError.collectAsStateWithLifecycle()
 
     val floor = state.floor(floorId)
 
@@ -189,6 +200,21 @@ fun FloorScreen(
                 Arrangement.spacedBy(12.dp)
 
         ) {
+
+
+            // Above the plan, so a failed save is read before the plan it failed to change.
+            actionError?.let { message ->
+
+                item {
+
+                    AlertBanner(
+                        message = message,
+                        onDismiss = viewModel::dismissActionError,
+                    )
+
+                }
+
+            }
 
 
             /*

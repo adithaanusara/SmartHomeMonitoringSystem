@@ -356,10 +356,11 @@ summed in milliseconds before formatting.
       objects all deserialise correctly under obfuscation
 - [x] v1.0 published as a GitHub Release (tag on `f117004`), asset `SmartHomeApp-v1.0.apk`
 - [x] v1.1 published — `versionCode 2`, added the manual floor plan editor and the release-build fix
-- [ ] **Publish v1.2** — `versionCode 3` / `versionName "1.2"`, the UI/UX pass. Built and
-      signature-verified (v2 scheme, `CN=Smart Home Monitoring System`). The README link points at
-      v1.2 and 404s until this release is cut. Upload
-      `app/build/outputs/apk/release/SmartHomeApp-v1.2.apk`
+- [x] v1.2 published — `versionCode 3`, the UI/UX pass
+- [ ] **Publish v1.3** — `versionCode 4` / `versionName "1.3"`, the floor plan editor fixes. Built
+      and signature-verified (v2 scheme, `CN=Smart Home Monitoring System`). The README link points
+      at v1.3 and 404s until this release is cut. Upload
+      `app/build/outputs/apk/release/SmartHomeApp-v1.3.apk`
 - [x] **Technical report** — `docs/TECHNICAL_REPORT.md`, covering exactly the three topics the spec
       names: the synchronisation mechanism, floor representation, and simulator operations, with the
       schema, a component diagram and a sync sequence diagram
