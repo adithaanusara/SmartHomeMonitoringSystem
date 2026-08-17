@@ -351,10 +351,14 @@ summed in milliseconds before formatting.
 
 ### Phase 4 — Deliverables
 
-- [x] **APK** — signed release build, R8-shrunk to **2.6 MB** (from 22 MB debug), verified running
+- [x] **APK** — signed release build, R8-shrunk to **2.58 MB** (from 22 MB debug), verified running
       on a Pixel 6 AVD: sign-in, dashboard, floor grid, and nested `channels` / `safety` / `schedule`
       objects all deserialise correctly under obfuscation
-- [x] Published as GitHub Release **v1.0** (tag on `12dc1b6`), asset `SmartHomeApp-v1.0.apk`, linked from the README
+- [x] v1.0 published as a GitHub Release (tag on `f117004`), asset `SmartHomeApp-v1.0.apk`
+- [ ] **Publish v1.1** — `versionCode 2` / `versionName "1.1"`, built and signature-verified
+      (v2 scheme, `CN=Smart Home Monitoring System`). **v1.0 is 12 commits behind and predates the
+      floor plan editor**, so the README link points at v1.1 and 404s until this release is cut.
+      Upload `app/build/outputs/apk/release/SmartHomeApp-v1.1.apk`
 - [ ] **Technical report** covering exactly the three topics the spec names: the synchronisation mechanism, floor representation, and simulator operations. Include the schema, a component diagram, and a sync sequence diagram
 - [ ] **README** — setup steps, Firebase config, how to run simulator and worker, APK link, team contributions
 - [ ] **Demo video, ≤25 min** — all three members on camera, each introducing themselves and their own contribution
