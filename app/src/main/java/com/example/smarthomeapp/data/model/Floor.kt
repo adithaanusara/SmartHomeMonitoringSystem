@@ -44,8 +44,19 @@ data class Floor(
     /**
      * Rooms drawn by the user, keyed by room id. See [Room] — geometry is stored as fractions of
      * the plan area, so it survives being rendered at three different sizes.
+     *
+     * Excluded from the Firebase mapper and populated by `HouseRepository` instead, for the same
+     * reason [id] is: the mapper aborts the *entire* object when one field does not match its
+     * declared type, and `observeChildren` then skips that child. A single malformed room —
+     * written by an older build, or by a teammate still running an older APK — would take the
+     * whole floor and its devices off the dashboard with no error anywhere. Parsing it separately
+     * degrades that to "the floor renders, the bad rooms do not".
+     *
+     * Because it is excluded, writing a whole [Floor] never persists rooms; use
+     * `HouseRepository.updateFloorRooms`.
      */
-    val rooms: Map<String, Room> = emptyMap(),
+    @get:Exclude
+    var rooms: Map<String, Room> = emptyMap(),
 
 ) {
 

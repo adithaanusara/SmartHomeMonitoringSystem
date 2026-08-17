@@ -1,5 +1,6 @@
 package com.example.smarthomeapp.data.model
 
+import com.google.firebase.database.Exclude
 import com.google.firebase.database.IgnoreExtraProperties
 
 /**
@@ -34,4 +35,22 @@ data class Room(
 
     /** Height as a fraction of plan height, 0..1. */
     val height: Float = 0f,
-)
+) {
+
+    /**
+     * True when this rectangle is a usable 0..1 fraction of the plan.
+     *
+     * Rooms written by an earlier build hold raw canvas pixels — values in the hundreds — and
+     * rendering those multiplies them by the plan width again, placing the room a hundred screens
+     * away. Readers drop rooms that fail this check rather than drawing nonsense.
+     */
+    @get:Exclude
+    val hasRenderableGeometry: Boolean
+        get() = x in 0f..1f &&
+                y in 0f..1f &&
+                width > 0f &&
+                height > 0f &&
+                // Tolerance for float rounding on values that were divided on the way in.
+                x + width <= 1.001f &&
+                y + height <= 1.001f
+}
