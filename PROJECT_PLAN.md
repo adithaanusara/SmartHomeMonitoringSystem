@@ -96,6 +96,7 @@ Proposed schema (flat, denormalised by `houseId` so each screen needs one listen
 
 /floors/{houseId}/{floorId}
     name, level, planImageAsset, gridCols, gridRows
+    rooms: { {roomId}: { name, x, y, width, height } }   // fractions of the plan, 0..1
 
 /devices/{houseId}/{deviceId}
     floorId, name
@@ -160,15 +161,18 @@ Design notes that will save you rework:
 - [x] `FirebaseAuthService` — sign-in, sign-up, password reset, sign-out, `authState()` flow
 - [x] `FirebaseDatabaseService` — path builders, `valueEvents()` listener-to-Flow bridge, `observeObject`/`observeChildren`, atomic multi-path update
 - [x] `UserRepository`, `HouseRepository`, `DeviceRepository`
-- [x] Deleted `FirebaseStorageService.kt` and `Room.kt`
+- [x] Deleted `FirebaseStorageService.kt`
 
 Three decisions worth knowing before building on this:
 
 - **Enums are stored as strings, not Kotlin enums.** The Firebase mapper throws on an unrecognised
   constant, and two of the three writers to `/devices` are untyped JavaScript. Read them through
   `device.deviceType` / `device.effectiveStatus`, which fall back rather than crash the screen.
-- **`Room` was dropped.** The schema places devices on a floor grid directly, so a room entity added
-  a nesting level for no marks. The plan listed it before the schema existed; the schema wins.
+- **`Room` came back, but as geometry rather than as a nesting level.** It was dropped first time
+  round because devices sit on the floor grid directly, so a room *entity* owning devices would
+  have added a level of nesting for no marks. That reasoning still holds and still applies:
+  a room is a labelled rectangle drawn on the plan, devices remain attached to the floor, and
+  nothing looks a device up through a room.
 - **Every toggle is one atomic multi-path update** covering status, `safety/onSince`, channel
   roll-up and the `/events` entry. A partial write would leave a hazard device ON with no `onSince`
   — precisely the state the worker cannot protect against.
@@ -201,7 +205,10 @@ Three decisions:
 
 - [x] `HomeScreen` — summary tiles (active / devices / faults), unread alerts with acknowledge, floor list, add-floor dialog, empty state that offers to create a house
 - [x] `FloorScreen` — plan image with grid overlay, device markers at `gridX`/`gridY`, device list, delete-floor confirmation
-- [x] Add and delete floors (edit still to do)
+- [x] Add and delete floors
+- [x] `FloorPlanEditorScreen` + `RoomCanvas` — draw rooms by dragging, name them, undo/clear, save
+      to `/floors/.../rooms`. Reachable from the floor card on the dashboard and from the floor
+      screen's app bar. Rooms render as a layer over the bundled plan image, not instead of it
 - [x] `FloorCard`, `DeviceCard`, `StatusBadge`, `AlertBanner`, `DeviceIcon` components
 - [x] `HomeViewModel` — house-scoped state, auth → user → house → floors/devices/alerts
 - [x] Two bundled vector floor plans + `FloorPlans.kt` name→drawable map
@@ -257,8 +264,8 @@ Two observations from the run:
   duplicate touches from the test automation, not the app — a controlled single tap produced
   exactly one event.
 
-Still to do in this workstream: `ScheduleScreen`, `ReportScreen` + `ReportViewModel`, floor editing,
-and long-press-to-toggle on the grid markers (currently tap opens detail).
+Still to do in this workstream: long-press-to-toggle on the grid markers (currently tap opens
+detail).
 
 **Scheduling** — built and verified end-to-end
 

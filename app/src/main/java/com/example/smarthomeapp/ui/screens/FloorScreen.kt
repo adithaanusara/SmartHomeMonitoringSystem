@@ -1,7 +1,7 @@
 package com.example.smarthomeapp.ui.screens
 
 import androidx.compose.foundation.Canvas
-
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -37,13 +37,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -411,13 +412,30 @@ private fun FloorPlanGrid(
 
 
             /*
-             * The rooms the user drew in the editor.
+             * Layer 1: the bundled plan drawable, when this floor has one. Absent for a floor
+             * the user drew from scratch, which is why the lookup is nullable.
+             */
+            floorPlanResource(floor.planImageAsset)?.let { planRes ->
+
+                Image(
+                    painter = painterResource(planRes),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+            }
+
+
+            /*
+             * Layer 2: the rooms the user drew in the editor.
              *
              * Geometry is stored as fractions of the plan, so it scales onto whatever size this
              * card happens to be — the same numbers drive the editor canvas, which is a
-             * different size again. Drawn first so grid lines and device markers stay on top.
+             * different size again. Drawn under the grid lines and device markers so a marker is
+             * never hidden behind a room fill.
              */
-            floor.rooms.forEach { room ->
+            floor.rooms.values.forEach { room ->
 
                 Box(
                     modifier = Modifier
@@ -447,7 +465,7 @@ private fun FloorPlanGrid(
             }
 
 
-            if (floor.rooms.isEmpty()) {
+            if (floor.rooms.isEmpty() && floor.planImageAsset.isBlank()) {
 
                 Text(
                     text = "No rooms drawn yet — use the edit button to draw this floor.",

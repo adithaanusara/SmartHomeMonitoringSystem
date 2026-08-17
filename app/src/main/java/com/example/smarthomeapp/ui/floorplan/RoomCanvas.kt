@@ -34,7 +34,7 @@ private const val MIN_ROOM_PX = 40f
  */
 @Composable
 fun RoomCanvas(
-    rooms: List<Room>,
+    rooms: Collection<Room>,
     onRoomDrawn: (
         x: Float,
         y: Float,
@@ -42,6 +42,8 @@ fun RoomCanvas(
         height: Float
     ) -> Unit,
     modifier: Modifier = Modifier,
+    /** Transparent when a plan image is showing behind the canvas. */
+    backgroundColor: Color = Color(0xFFF4F6F8),
 ) {
 
     // Where user first touches
@@ -58,7 +60,7 @@ fun RoomCanvas(
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF4F6F8))
+            .background(backgroundColor)
             .pointerInput(Unit) {
 
                 detectDragGestures(

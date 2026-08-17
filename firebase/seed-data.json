@@ -25,16 +25,16 @@
       "ground": {
         "name": "Ground Floor",
         "level": 0,
+        "planImageAsset": "plan_ground_floor",
         "gridCols": 8,
-        "gridRows": 6,
-        "rooms": []
+        "gridRows": 6
       },
       "first": {
         "name": "First Floor",
         "level": 1,
+        "planImageAsset": "plan_first_floor",
         "gridCols": 8,
-        "gridRows": 6,
-        "rooms": []
+        "gridRows": 6
       }
     }
   },

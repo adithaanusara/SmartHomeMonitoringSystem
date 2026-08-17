@@ -40,7 +40,6 @@ import com.example.smarthomeapp.ui.components.AlertBanner
 import com.example.smarthomeapp.ui.components.FloorCard
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 import com.example.smarthomeapp.viewmodel.HouseUiState
-import com.example.smarthomeapp.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +89,7 @@ fun HomeScreen(
                     actionError = actionError,
                     onDismissError = viewModel::dismissActionError,
                     onOpenFloor = onOpenFloor,
+                    onOpenFloorEditor = onOpenFloorEditor,
                     onAcknowledgeAlert = viewModel::acknowledgeAlert,
                 )
             }
@@ -121,6 +121,7 @@ private fun HouseContent(
     actionError: String?,
     onDismissError: () -> Unit,
     onOpenFloor: (String) -> Unit,
+    onOpenFloorEditor: (String) -> Unit,
     onAcknowledgeAlert: (String) -> Unit,
 ) {
     LazyColumn(
@@ -186,6 +187,7 @@ private fun HouseContent(
                 deviceCount = summary.deviceCount,
                 onCount = summary.onCount,
                 onClick = { onOpenFloor(summary.floor.id) },
+                onEditPlan = { onOpenFloorEditor(summary.floor.id) },
             )
         }
     }
@@ -295,6 +297,11 @@ private fun AddFloorDialog(
         mutableStateOf("")
     }
 
+    /** Null means "no bundled plan" — the floor starts blank and is drawn in the editor. */
+    var selectedPlan by remember {
+        mutableStateOf<String?>(null)
+    }
+
     val nextLevel =
         (existingLevels.maxOrNull() ?: -1) + 1
 
@@ -336,6 +343,37 @@ private fun AddFloorDialog(
 
 
                 Text(
+                    text = "Plan",
+                    style = MaterialTheme.typography.labelLarge,
+                )
+
+
+                /*
+                 * Pick a bundled plan, or none. "Draw it" is first because a hand-drawn floor is
+                 * now the more flexible option — the sample plans stay for floors that match one.
+                 */
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                    androidx.compose.material3.FilterChip(
+                        selected = selectedPlan == null,
+                        onClick = { selectedPlan = null },
+                        label = { Text("Draw it") },
+                    )
+
+                    AVAILABLE_FLOOR_PLANS.forEach { plan ->
+
+                        androidx.compose.material3.FilterChip(
+                            selected = selectedPlan == plan,
+                            onClick = { selectedPlan = plan },
+                            label = { Text(floorPlanLabel(plan)) },
+                        )
+
+                    }
+
+                }
+
+
+                Text(
                     text = "Rooms can be drawn manually after creating the floor.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -365,7 +403,9 @@ private fun AddFloorDialog(
 
                             level = nextLevel,
 
-                            rooms = emptyList()
+                            planImageAsset = selectedPlan.orEmpty(),
+
+                            rooms = emptyMap()
 
                         )
 
