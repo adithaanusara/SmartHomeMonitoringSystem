@@ -154,9 +154,15 @@ private fun AuthenticatedNavHost(
                 )
 
 
+            val state by homeViewModel.uiState
+                .collectAsStateWithLifecycle()
+
+
             FloorPlanEditorScreen(
 
-                floorId = floorId,
+                floor = state.floor(floorId),
+
+                isLoading = state.isLoading,
 
                 onBack = {
                     navController.popBackStack()
@@ -164,7 +170,11 @@ private fun AuthenticatedNavHost(
 
                 onSave = { rooms ->
 
-                    // next step Firebase save
+                    homeViewModel.updateFloorRooms(
+                        floorId,
+                        rooms
+                    )
+
                     navController.popBackStack()
 
                 }
