@@ -21,6 +21,17 @@ import kotlin.math.max
 import kotlin.math.min
 
 
+/** Smallest drag, in pixels, that counts as a room rather than a stray touch. */
+private const val MIN_ROOM_PX = 40f
+
+/**
+ * Draw-by-dragging surface for the floor plan editor.
+ *
+ * Touch positions arrive in canvas pixels but are reported to [onRoomDrawn] as **fractions of the
+ * canvas, 0..1**. The editor canvas, the dashboard thumbnail and the floor screen are all
+ * different sizes, so a room stored in pixels would land somewhere different on each of them —
+ * and on a different phone, somewhere different again.
+ */
 @Composable
 fun RoomCanvas(
     rooms: List<Room>,
@@ -94,19 +105,33 @@ fun RoomCanvas(
                             )
 
 
+                            val canvasWidth = size.width.toFloat()
+                            val canvasHeight = size.height.toFloat()
+
+
                             /*
                              * Prevent accidental tiny rooms.
                              */
                             if (
-                                width >= 40f &&
-                                height >= 40f
+                                width >= MIN_ROOM_PX &&
+                                height >= MIN_ROOM_PX &&
+                                canvasWidth > 0f &&
+                                canvasHeight > 0f
                             ) {
 
+                                /*
+                                 * Convert to fractions of the canvas, and clamp: a drag that
+                                 * ran off the edge would otherwise store a room reaching
+                                 * outside the plan.
+                                 */
+                                val fx = (left / canvasWidth).coerceIn(0f, 1f)
+                                val fy = (top / canvasHeight).coerceIn(0f, 1f)
+
                                 onRoomDrawn(
-                                    left,
-                                    top,
-                                    width,
-                                    height
+                                    fx,
+                                    fy,
+                                    (width / canvasWidth).coerceIn(0f, 1f - fx),
+                                    (height / canvasHeight).coerceIn(0f, 1f - fy)
                                 )
                             }
                         }
@@ -186,19 +211,25 @@ fun RoomCanvas(
         rooms.forEach { room ->
 
 
+            // Stored as fractions of the plan, so scale back up to this canvas.
+            val topLeft = Offset(
+                room.x * size.width,
+                room.y * size.height
+            )
+
+            val roomSize = Size(
+                room.width * size.width,
+                room.height * size.height
+            )
+
+
             // Light inside
             drawRect(
                 color = Color(0xFFE3F2FD),
 
-                topLeft = Offset(
-                    room.x,
-                    room.y
-                ),
+                topLeft = topLeft,
 
-                size = Size(
-                    room.width,
-                    room.height
-                )
+                size = roomSize
             )
 
 
@@ -206,15 +237,9 @@ fun RoomCanvas(
             drawRect(
                 color = Color(0xFF455A64),
 
-                topLeft = Offset(
-                    room.x,
-                    room.y
-                ),
+                topLeft = topLeft,
 
-                size = Size(
-                    room.width,
-                    room.height
-                ),
+                size = roomSize,
 
                 style = Stroke(
                     width = 5f

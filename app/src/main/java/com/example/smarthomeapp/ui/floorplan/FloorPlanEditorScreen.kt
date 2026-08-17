@@ -1,6 +1,7 @@
 package com.example.smarthomeapp.ui.floorplan
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,19 +25,30 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.Room
 
 
+/**
+ * Draws the rooms of one floor.
+ *
+ * Takes the [floor] rather than just its id so the canvas can be seeded with what is already
+ * saved: opening the editor on a floor that has rooms must show them, otherwise every save
+ * silently replaces the plan instead of editing it.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FloorPlanEditorScreen(
-    floorId: String,
+    floor: Floor?,
+    isLoading: Boolean,
     onBack: () -> Unit,
     onSave: (List<Room>) -> Unit
 ) {
@@ -44,6 +56,19 @@ fun FloorPlanEditorScreen(
 
     var rooms by remember {
         mutableStateOf<List<Room>>(emptyList())
+    }
+
+
+    /*
+     * Seed once the floor first arrives, keyed on its id rather than on the room list —
+     * re-seeding on every database emission would wipe a drawing in progress.
+     */
+    LaunchedEffect(floor?.id) {
+
+        floor?.let {
+            rooms = it.rooms
+        }
+
     }
 
 
@@ -93,6 +118,31 @@ fun FloorPlanEditorScreen(
 
 
     ) { innerPadding ->
+
+
+        /*
+         * The floor is resolved from the shared house state, so it is briefly absent on first
+         * composition — and permanently absent if it was deleted from another device while this
+         * screen was open. Drawing onto a floor that is not there would save into nothing.
+         */
+        if (floor == null) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text(
+                    if (isLoading) "Loading…" else "This floor no longer exists."
+                )
+
+            }
+
+            return@Scaffold
+        }
 
 
 
@@ -319,10 +369,13 @@ fun FloorPlanEditorScreen(
 
 
 
+            /*
+             * Deliberately enabled even with no rooms: clearing a plan and saving that is a
+             * legitimate edit, and gating Save on a non-empty canvas would make an existing
+             * plan impossible to remove.
+             */
             Button(
                 modifier = Modifier.fillMaxWidth(),
-
-                enabled = rooms.isNotEmpty(),
 
                 onClick = {
 

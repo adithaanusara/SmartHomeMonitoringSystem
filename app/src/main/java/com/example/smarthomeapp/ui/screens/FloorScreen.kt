@@ -3,6 +3,7 @@ package com.example.smarthomeapp.ui.screens
 import androidx.compose.foundation.Canvas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -47,6 +48,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smarthomeapp.data.model.Device
@@ -57,8 +59,6 @@ import com.example.smarthomeapp.ui.components.icon
 import com.example.smarthomeapp.ui.components.label
 import com.example.smarthomeapp.ui.components.statusColors
 import com.example.smarthomeapp.viewmodel.HomeViewModel
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Alignment
 
 
@@ -368,6 +368,15 @@ private fun FloorPlanGrid(
             .copy(alpha = 0.35f)
 
 
+    val roomFillColor =
+        MaterialTheme.colorScheme.secondaryContainer
+            .copy(alpha = 0.45f)
+
+
+    val roomBorderColor =
+        MaterialTheme.colorScheme.outline
+
+
     Card(
 
         modifier =
@@ -402,22 +411,53 @@ private fun FloorPlanGrid(
 
 
             /*
-             * Existing floor plan background.
+             * The rooms the user drew in the editor.
+             *
+             * Geometry is stored as fractions of the plan, so it scales onto whatever size this
+             * card happens to be — the same numbers drive the editor canvas, which is a
+             * different size again. Drawn first so grid lines and device markers stay on top.
              */
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
-            ) {
+            floor.rooms.forEach { room ->
+
+                Box(
+                    modifier = Modifier
+                        .offset(
+                            x = maxWidth * room.x,
+                            y = maxHeight * room.y
+                        )
+                        .size(
+                            width = maxWidth * room.width,
+                            height = maxHeight * room.height
+                        )
+                        .background(roomFillColor)
+                        .border(1.dp, roomBorderColor),
+
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Text(
+                        text = room.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+
+                }
+
+            }
+
+
+            if (floor.rooms.isEmpty()) {
 
                 Text(
-                    text = if (floor.rooms.isEmpty()) {
-                        "No rooms created yet"
-                    } else {
-                        "${floor.rooms.size} rooms created"
-                    },
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "No rooms drawn yet — use the edit button to draw this floor.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 24.dp)
                 )
 
             }

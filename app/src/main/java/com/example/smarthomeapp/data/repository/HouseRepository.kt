@@ -2,6 +2,7 @@ package com.example.smarthomeapp.data.repository
 
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.House
+import com.example.smarthomeapp.data.model.Room
 import com.example.smarthomeapp.data.remote.FirebaseDatabaseService
 import com.example.smarthomeapp.data.remote.observeChildren
 import com.example.smarthomeapp.data.remote.observeObject
@@ -55,6 +56,22 @@ class HouseRepository(
 
     suspend fun updateFloor(houseId: String, floor: Floor) {
         db.floor(houseId, floor.id).setValueSuspend(floor)
+    }
+
+    /**
+     * Writes only the `rooms` child rather than the whole floor.
+     *
+     * Saving the plan must not depend on the client holding a complete, current copy of every
+     * other field on the floor — a full `setValue` would silently drop anything this build of the
+     * app does not know about, which is exactly how a schema addition by one teammate gets erased
+     * by another teammate's screen.
+     */
+    suspend fun updateFloorRooms(houseId: String, floorId: String, rooms: List<Room>) {
+        db.floor(houseId, floorId).child(FLOOR_CHILD_ROOMS).setValueSuspend(rooms)
+    }
+
+    private companion object {
+        const val FLOOR_CHILD_ROOMS = "rooms"
     }
 
     /**

@@ -8,6 +8,7 @@ import com.example.smarthomeapp.data.model.DeviceSchedule
 import com.example.smarthomeapp.data.model.DeviceStatus
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.House
+import com.example.smarthomeapp.data.model.Room
 import com.example.smarthomeapp.data.remote.FirebaseAuthService
 import com.example.smarthomeapp.data.repository.DeviceRepository
 import com.example.smarthomeapp.data.repository.HouseRepository
@@ -172,6 +173,17 @@ class HomeViewModel(
     fun addFloor(floor: Floor) {
         val houseId = uiState.value.houseId ?: return
         runAction { houseRepository.addFloor(houseId, floor) }
+    }
+
+    /**
+     * Persists the rooms drawn in the floor plan editor.
+     *
+     * Room geometry is stored as fractions of the plan area, so it is written as-is — no screen
+     * dimensions are involved on the way in or out.
+     */
+    fun updateFloorRooms(floorId: String, rooms: List<Room>) {
+        val houseId = uiState.value.houseId ?: return
+        runAction { houseRepository.updateFloorRooms(houseId, floorId, rooms) }
     }
 
     fun deleteFloor(floorId: String) {
