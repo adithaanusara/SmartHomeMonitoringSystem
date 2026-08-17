@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.Room
+import com.example.smarthomeapp.ui.screens.floorPlanAlpha
 import com.example.smarthomeapp.ui.screens.floorPlanResource
 import java.util.UUID
 
@@ -334,6 +335,7 @@ fun FloorPlanEditorScreen(
                             painter = painterResource(it),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
+                            alpha = floorPlanAlpha(),
                             modifier = Modifier.fillMaxSize(),
                         )
 

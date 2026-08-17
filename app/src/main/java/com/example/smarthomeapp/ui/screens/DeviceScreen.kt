@@ -1,5 +1,6 @@
 package com.example.smarthomeapp.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import com.example.smarthomeapp.ui.components.formatDuration
 import com.example.smarthomeapp.ui.components.icon
 import com.example.smarthomeapp.ui.components.label
 import com.example.smarthomeapp.ui.components.statusColors
+import com.example.smarthomeapp.ui.components.statusSwitchColors
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
 
@@ -216,6 +218,7 @@ private fun SimpleToggleCard(device: Device, onToggle: (Boolean) -> Unit) {
                 checked = device.isOn,
                 onCheckedChange = onToggle,
                 enabled = enabled,
+                colors = statusSwitchColors(),
             )
         }
         FaultNotice(device)
@@ -247,6 +250,7 @@ private fun MultiSwitchCard(
                 checked = device.isOn,
                 onCheckedChange = onToggleAll,
                 enabled = enabled,
+                colors = statusSwitchColors(),
             )
         }
 
@@ -269,6 +273,7 @@ private fun MultiSwitchCard(
                     checked = channel.channelStatus == DeviceStatus.ON,
                     onCheckedChange = { on -> onToggleChannel(channelId, on) },
                     enabled = enabled,
+                    colors = statusSwitchColors(),
                 )
             }
         }
@@ -309,7 +314,12 @@ private fun HazardCard(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
             )
-            Switch(checked = device.isOn, onCheckedChange = onToggle, enabled = enabled)
+            Switch(
+                checked = device.isOn,
+                onCheckedChange = onToggle,
+                enabled = enabled,
+                colors = statusSwitchColors(),
+            )
         }
         FaultNotice(device)
     }
@@ -431,9 +441,13 @@ fun List<Int>.dayNames(): String =
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
+        // Same hairline border as the cards on every other screen — without it these were the
+        // only surfaces in the app defined purely by a fill, and they floated.
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
