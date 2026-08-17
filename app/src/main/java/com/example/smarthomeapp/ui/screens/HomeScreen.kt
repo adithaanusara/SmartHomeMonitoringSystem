@@ -1,5 +1,13 @@
 package com.example.smarthomeapp.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,12 +15,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.DeviceHub
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,13 +43,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.smarthomeapp.data.model.DeviceStatus
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.ui.components.AlertBanner
 import com.example.smarthomeapp.ui.components.FloorCard
+import com.example.smarthomeapp.ui.components.statusColors
+import com.example.smarthomeapp.ui.theme.IconSize
+import com.example.smarthomeapp.ui.theme.Spacing
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 import com.example.smarthomeapp.viewmodel.HouseUiState
 
@@ -62,8 +80,11 @@ fun HomeScreen(
                 title = { Text(state.house?.name?.ifBlank { null } ?: "Smart Home") },
                 actions = {
                     if (state.houseId != null) {
+                        // BarChart rather than Assessment: Assessment draws its bars inside a
+                        // filled rounded square, so next to the plain-stroke + and sign-out icons
+                        // it read as a selected chip rather than as a peer action.
                         IconButton(onClick = onOpenReport) {
-                            Icon(Icons.Filled.Assessment, contentDescription = "Usage report")
+                            Icon(Icons.Filled.BarChart, contentDescription = "Usage report")
                         }
                         IconButton(onClick = { showAddFloor = true }) {
                             Icon(Icons.Filled.Add, contentDescription = "Add floor")
@@ -145,14 +166,7 @@ private fun HouseContent(
 
         val unread = state.alerts.filter { !it.acknowledged }
         if (unread.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Alerts",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
+            item { SectionHeader("Alerts") }
             items(unread, key = { it.id }) { alert ->
                 AlertBanner(
                     message = alert.message.ifBlank { alert.kind },
@@ -162,14 +176,7 @@ private fun HouseContent(
             }
         }
 
-        item {
-            Text(
-                text = "Floors",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-        }
+        item { SectionHeader("Floors") }
 
         if (state.floors.isEmpty()) {
             item {
@@ -193,34 +200,97 @@ private fun HouseContent(
     }
 }
 
+/**
+ * The three numbers that answer "is my house OK?" before the user reads anything else.
+ *
+ * Each tile carries its own icon and colour so the row can be parsed by shape, not just by
+ * reading three similar digits. Faults is the only one that changes colour with its value —
+ * zero faults is unremarkable and stays neutral; anything above zero turns error-red, so the
+ * one number that needs attention is the one that visually shouts.
+ */
 @Composable
 private fun SummaryRow(active: Int, total: Int, faults: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        SummaryTile("Active", "$active", Modifier.weight(1f))
-        SummaryTile("Devices", "$total", Modifier.weight(1f))
-        SummaryTile("Faults", "$faults", Modifier.weight(1f))
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        SummaryTile(
+            label = "Active",
+            value = active,
+            icon = Icons.Filled.Bolt,
+            accent = statusColors(DeviceStatus.ON).content,
+            modifier = Modifier.weight(1f),
+        )
+        SummaryTile(
+            label = "Devices",
+            value = total,
+            icon = Icons.Filled.DeviceHub,
+            accent = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f),
+        )
+        SummaryTile(
+            label = "Faults",
+            value = faults,
+            icon = Icons.Filled.ErrorOutline,
+            accent = if (faults > 0) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
 @Composable
-private fun SummaryTile(label: String, value: String, modifier: Modifier = Modifier) {
+private fun SummaryTile(
+    label: String,
+    value: Int,
+    icon: ImageVector,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
     Card(
         modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp),
+                .padding(vertical = Spacing.lg, horizontal = Spacing.md),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(IconSize.sm),
             )
+
+            // Counts change when the worker or the simulator writes, not because the user did
+            // anything — the number slides so that movement is noticed rather than blinked past.
+            AnimatedContent(
+                targetState = value,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        slideInVertically { it } + fadeIn() togetherWith
+                            slideOutVertically { -it } + fadeOut()
+                    } else {
+                        slideInVertically { -it } + fadeIn() togetherWith
+                            slideOutVertically { it } + fadeOut()
+                    }.using(SizeTransform(clip = false))
+                },
+                label = "summaryValue",
+            ) { shown ->
+                Text(
+                    text = "$shown",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = accent,
+                )
+            }
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
@@ -228,6 +298,17 @@ private fun SummaryTile(label: String, value: String, modifier: Modifier = Modif
             )
         }
     }
+}
+
+/** One consistent treatment for the "Alerts" / "Floors" dividers between dashboard sections. */
+@Composable
+private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(top = Spacing.sm, bottom = Spacing.xs),
+    )
 }
 
 @Composable

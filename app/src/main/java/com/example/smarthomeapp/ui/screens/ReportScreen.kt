@@ -1,5 +1,9 @@
 package com.example.smarthomeapp.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthomeapp.ui.components.icon
+import com.example.smarthomeapp.ui.theme.Spacing
 import com.example.smarthomeapp.utils.formatOnDuration
 import com.example.smarthomeapp.viewmodel.DeviceUsage
 import com.example.smarthomeapp.viewmodel.ReportRange
@@ -257,19 +262,28 @@ private fun UsageBarRow(usage: DeviceUsage, peakOnMs: Long) {
             )
         }
 
+        // Bars grow from zero on first composition and re-animate when the range filter changes,
+        // so switching Today -> 7 days reads as the same bars re-measuring rather than as a
+        // completely new screen appearing.
+        val grown by animateFloatAsState(
+            targetValue = fraction.coerceIn(0f, 1f),
+            animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing),
+            label = "usageBar",
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .height(10.dp)
+                .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             if (fraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(fraction.coerceIn(0.02f, 1f))
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .fillMaxWidth(grown.coerceAtLeast(0.02f))
+                        .height(10.dp)
+                        .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
                 )
             }
@@ -295,20 +309,23 @@ private fun UsageBarRow(usage: DeviceUsage, peakOnMs: Long) {
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 8.dp),
+                .padding(vertical = Spacing.lg, horizontal = Spacing.sm),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
             )
             Text(
@@ -321,13 +338,14 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
     }
 }
 
+/** Matches the dashboard's section dividers, so the two screens feel like one product. */
 @Composable
 private fun SectionTitle(text: String) {
     Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(top = 4.dp),
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = Spacing.sm, bottom = Spacing.xs),
     )
 }
 

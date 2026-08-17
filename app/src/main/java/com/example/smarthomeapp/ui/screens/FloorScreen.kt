@@ -59,6 +59,7 @@ import com.example.smarthomeapp.ui.components.DeviceCard
 import com.example.smarthomeapp.ui.components.icon
 import com.example.smarthomeapp.ui.components.label
 import com.example.smarthomeapp.ui.components.statusColors
+import com.example.smarthomeapp.ui.theme.Spacing
 import com.example.smarthomeapp.viewmodel.HomeViewModel
 import androidx.compose.ui.Alignment
 
@@ -206,17 +207,18 @@ fun FloorScreen(
 
             item {
 
+                // Same treatment as the dashboard's section dividers.
                 Text(
-                    text = "Devices",
+                    text = "DEVICES",
 
                     style =
-                        MaterialTheme.typography.titleSmall,
+                        MaterialTheme.typography.labelMedium,
 
-                    fontWeight =
-                        FontWeight.SemiBold,
+                    color =
+                        MaterialTheme.colorScheme.onSurfaceVariant,
 
                     modifier =
-                        Modifier.padding(top = 4.dp)
+                        Modifier.padding(top = Spacing.sm, bottom = Spacing.xs)
                 )
 
             }
@@ -421,6 +423,7 @@ private fun FloorPlanGrid(
                     painter = painterResource(planRes),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    alpha = floorPlanAlpha(),
                     modifier = Modifier.fillMaxSize(),
                 )
 

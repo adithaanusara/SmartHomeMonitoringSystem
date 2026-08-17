@@ -1,5 +1,6 @@
 package com.example.smarthomeapp.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeapp.data.model.Floor
+import com.example.smarthomeapp.ui.screens.floorPlanAlpha
 import com.example.smarthomeapp.ui.screens.floorPlanResource
+import com.example.smarthomeapp.ui.theme.Spacing
 
 @Composable
 fun FloorCard(
@@ -43,14 +46,16 @@ fun FloorCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             // Thumbnail of the plan, so floors are told apart by shape rather than by name alone.
             Box(
@@ -67,6 +72,7 @@ fun FloorCard(
                         painter = painterResource(planRes),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
+                        alpha = floorPlanAlpha(),
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -88,11 +94,14 @@ fun FloorCard(
                 }
             }
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Text(
                     text = floor.name.ifBlank { "Unnamed floor" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = when (deviceCount) {
