@@ -1,10 +1,12 @@
 package com.example.smarthomeapp.ui.floorplan
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,9 +34,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeapp.data.model.Floor
 import com.example.smarthomeapp.data.model.Room
+import com.example.smarthomeapp.ui.screens.floorPlanResource
+import java.util.UUID
 
 
 /**
@@ -50,12 +57,16 @@ fun FloorPlanEditorScreen(
     floor: Floor?,
     isLoading: Boolean,
     onBack: () -> Unit,
-    onSave: (List<Room>) -> Unit
+    onSave: (Map<String, Room>) -> Unit
 ) {
 
 
+    /*
+     * Keyed by room id, and insertion-ordered — `Map + pair` yields a LinkedHashMap — so Undo
+     * removes the room drawn most recently rather than an arbitrary one.
+     */
     var rooms by remember {
-        mutableStateOf<List<Room>>(emptyList())
+        mutableStateOf<Map<String, Room>>(emptyMap())
     }
 
 
@@ -206,9 +217,9 @@ fun FloorPlanEditorScreen(
 
                     onClick = {
 
-                        if (rooms.isNotEmpty()) {
+                        rooms.keys.lastOrNull()?.let { newest ->
 
-                            rooms = rooms.dropLast(1)
+                            rooms = rooms - newest
 
                         }
 
@@ -241,7 +252,7 @@ fun FloorPlanEditorScreen(
 
                     onClick = {
 
-                        rooms = emptyList()
+                        rooms = emptyMap()
 
                     }
 
@@ -278,13 +289,22 @@ fun FloorPlanEditorScreen(
 
 
 
+            /*
+             * Same aspect ratio as the grid on FloorScreen, from the floor's own
+             * gridCols/gridRows. Room geometry is stored as fractions of whatever box it was
+             * drawn in, so drawing on a differently shaped canvas would stretch every room on
+             * the way to the floor screen — a square drawn here would arrive as a rectangle.
+             */
             Card(
 
                 modifier = Modifier
 
                     .fillMaxWidth()
 
-                    .height(420.dp),
+                    .aspectRatio(
+                        floor.gridCols.coerceAtLeast(1).toFloat() /
+                                floor.gridRows.coerceAtLeast(1).toFloat()
+                    ),
 
 
 
@@ -298,40 +318,65 @@ fun FloorPlanEditorScreen(
             ) {
 
 
-
-                RoomCanvas(
-
-                    rooms = rooms,
+                val planRes = floorPlanResource(floor.planImageAsset)
 
 
-                    modifier = Modifier.fillMaxSize(),
+                Box(modifier = Modifier.fillMaxSize()) {
 
 
+                    /*
+                     * The bundled plan, when there is one, so rooms are traced onto the layout
+                     * they belong to rather than drawn blind.
+                     */
+                    planRes?.let {
 
-                    onRoomDrawn = { x, y, width, height ->
-
-
-
-                        pendingRoom = PendingRoom(
-
-                            x = x,
-
-                            y = y,
-
-                            width = width,
-
-                            height = height
-
+                        Image(
+                            painter = painterResource(it),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
                         )
-
-
-
-                        showRoomNameDialog = true
-
 
                     }
 
-                )
+
+                    RoomCanvas(
+
+                        rooms = rooms.values,
+
+
+                        backgroundColor =
+                            if (planRes != null) Color.Transparent
+                            else Color(0xFFF4F6F8),
+
+
+                        modifier = Modifier.fillMaxSize(),
+
+
+                        onRoomDrawn = { x, y, width, height ->
+
+
+                            pendingRoom = PendingRoom(
+
+                                x = x,
+
+                                y = y,
+
+                                width = width,
+
+                                height = height
+
+                            )
+
+
+                            showRoomNameDialog = true
+
+
+                        }
+
+                    )
+
+                }
 
             }
 
@@ -428,28 +473,30 @@ fun FloorPlanEditorScreen(
                 if(roomName.isNotBlank()) {
 
 
-
-                    rooms = rooms + Room(
-
-
-                        id = System.currentTimeMillis()
-                            .toString(),
-
-
-                        name = roomName.trim(),
+                    /*
+                     * A random key rather than a timestamp: two rooms drawn inside the same
+                     * millisecond would otherwise collide, and the second would overwrite the
+                     * first instead of being added.
+                     */
+                    rooms = rooms + (
+                        UUID.randomUUID().toString() to Room(
 
 
-                        x = rectangle.x,
+                            name = roomName.trim(),
 
 
-                        y = rectangle.y,
+                            x = rectangle.x,
 
 
-                        width = rectangle.width,
+                            y = rectangle.y,
 
 
-                        height = rectangle.height
+                            width = rectangle.width,
 
+
+                            height = rectangle.height
+
+                        )
                     )
 
 

@@ -17,10 +17,20 @@ private val FLOOR_PLANS: Map<String, Int> = mapOf(
     "plan_first_floor" to R.drawable.plan_first_floor,
 )
 
-/** Falls back to the ground-floor plan so an unknown or empty asset name still renders a grid. */
+/**
+ * The drawable for a plan name, or null when the floor has no background image.
+ *
+ * Null rather than a fallback plan: since floors can be drawn room by room in the editor, "no
+ * plan image" is a legitimate state, and substituting some other floor's plan behind a
+ * hand-drawn layout would be actively misleading.
+ */
 @DrawableRes
-fun floorPlanResource(assetName: String?): Int =
-    FLOOR_PLANS[assetName] ?: R.drawable.plan_ground_floor
+fun floorPlanResource(assetName: String?): Int? =
+    assetName?.takeIf { it.isNotBlank() }?.let { FLOOR_PLANS[it] }
 
 /** Names offered when adding a floor. */
 val AVAILABLE_FLOOR_PLANS: List<String> = FLOOR_PLANS.keys.toList()
+
+/** "plan_ground_floor" -> "ground floor", for chips and labels. */
+fun floorPlanLabel(assetName: String): String =
+    assetName.removePrefix("plan_").replace('_', ' ')

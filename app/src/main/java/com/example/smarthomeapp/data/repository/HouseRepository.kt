@@ -66,7 +66,7 @@ class HouseRepository(
      * app does not know about, which is exactly how a schema addition by one teammate gets erased
      * by another teammate's screen.
      */
-    suspend fun updateFloorRooms(houseId: String, floorId: String, rooms: List<Room>) {
+    suspend fun updateFloorRooms(houseId: String, floorId: String, rooms: Map<String, Room>) {
         db.floor(houseId, floorId).child(FLOOR_CHILD_ROOMS).setValueSuspend(rooms)
     }
 

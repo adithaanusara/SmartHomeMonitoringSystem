@@ -181,7 +181,7 @@ class HomeViewModel(
      * Room geometry is stored as fractions of the plan area, so it is written as-is — no screen
      * dimensions are involved on the way in or out.
      */
-    fun updateFloorRooms(floorId: String, rooms: List<Room>) {
+    fun updateFloorRooms(floorId: String, rooms: Map<String, Room>) {
         val houseId = uiState.value.houseId ?: return
         runAction { houseRepository.updateFloorRooms(houseId, floorId, rooms) }
     }
